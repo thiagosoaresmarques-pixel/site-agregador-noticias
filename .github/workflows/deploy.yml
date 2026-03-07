@@ -1,0 +1,71 @@
+name: CI/CD — Test & Deploy
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  PROJECT_ID: project-03700a77-674e-4005-bf3
+  PROJECT_NUMBER: '1053093028879'
+  SERVICE: dialetica-news
+  REGION: southamerica-east1
+  WIF_PROVIDER: projects/1053093028879/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  WIF_SA: github-deploy@project-03700a77-674e-4005-bf3.iam.gserviceaccount.com
+
+jobs:
+  # ─── Stage 1: Test ────────────────────────────────
+  test:
+    name: 🧪 Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm test
+
+  # ─── Stage 2: Deploy to Cloud Run ─────────────────
+  deploy:
+    name: 🚀 Deploy
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --source=. \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --allow-unauthenticated \
+            --min-instances=1 \
+            --quiet
+
+      - name: Show URL
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE }} \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --format='value(status.url)')
+          echo "🚀 Deployed to: $URL"
