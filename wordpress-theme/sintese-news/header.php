@@ -52,6 +52,10 @@
             </nav>
 
             <div class="header-controls">
+                <button class="notif-bell" id="notifBell" style="display:none" aria-label="Notificações"
+                        data-icon="<?php echo esc_url(get_template_directory_uri() . '/assets/icon-512.png'); ?>">
+                    🔔
+                </button>
                 <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
                     <span id="themeIcon">🌙</span>
                 </button>

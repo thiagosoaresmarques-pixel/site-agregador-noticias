@@ -39,6 +39,22 @@
                 </ul>
             </div>
         </div>
+
+        <!-- Newsletter CTA -->
+        <div class="newsletter-cta" id="newsletterSection">
+            <div class="newsletter-inner">
+                <div class="newsletter-text">
+                    <h4>📬 Receba a Síntese</h4>
+                    <p>As melhores análises dialéticas direto no seu email.</p>
+                </div>
+                <form class="newsletter-form" id="newsletterForm">
+                    <input type="email" id="newsletterEmail" placeholder="seu@email.com" required autocomplete="email">
+                    <button type="submit" id="newsletterBtn">Inscrever</button>
+                </form>
+                <p class="newsletter-msg" id="newsletterMsg"></p>
+            </div>
+        </div>
+
         <div class="footer-bottom">
             <p>&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. Todas as perspectivas, uma verdade.</p>
         </div>
@@ -156,6 +172,76 @@
             });
         }
     });
+
+    // ── Newsletter Submission ─────────────────────
+    var nlForm = document.getElementById('newsletterForm');
+    var nlEmail = document.getElementById('newsletterEmail');
+    var nlBtn = document.getElementById('newsletterBtn');
+    var nlMsg = document.getElementById('newsletterMsg');
+
+    if (nlForm) {
+        nlForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var email = nlEmail.value.trim();
+            if (!email) return;
+
+            nlBtn.disabled = true;
+            nlBtn.textContent = '...';
+
+            fetch('/?rest_route=/sintese/v1/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email }),
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                nlMsg.textContent = data.message || '✅ Inscrito com sucesso!';
+                nlMsg.className = 'newsletter-msg ' + (data.success ? 'success' : 'error');
+                if (data.success) {
+                    nlEmail.value = '';
+                    nlBtn.textContent = '✓';
+                } else {
+                    nlBtn.textContent = 'Inscrever';
+                    nlBtn.disabled = false;
+                }
+            })
+            .catch(function() {
+                nlMsg.textContent = '❌ Erro ao inscrever. Tente novamente.';
+                nlMsg.className = 'newsletter-msg error';
+                nlBtn.textContent = 'Inscrever';
+                nlBtn.disabled = false;
+            });
+        });
+    }
+
+    // ── Push Notification Bell ─────────────────────
+    var bellBtn = document.getElementById('notifBell');
+    if (bellBtn && 'Notification' in window) {
+        bellBtn.style.display = '';
+        bellBtn.addEventListener('click', function() {
+            if (Notification.permission === 'granted') {
+                bellBtn.classList.add('active');
+                new Notification('Síntese News', {
+                    body: '🔔 Notificações ativadas! Você receberá alertas de novas análises.',
+                    icon: bellBtn.dataset.icon || ''
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(function(p) {
+                    if (p === 'granted') {
+                        bellBtn.classList.add('active');
+                        new Notification('Síntese News', {
+                            body: '🔔 Notificações ativadas!',
+                            icon: bellBtn.dataset.icon || ''
+                        });
+                    }
+                });
+            }
+        });
+        // Indicate if already granted
+        if (Notification.permission === 'granted') {
+            bellBtn.classList.add('active');
+        }
+    }
 
 })();
 </script>

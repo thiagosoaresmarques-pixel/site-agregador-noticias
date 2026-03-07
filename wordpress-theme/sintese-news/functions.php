@@ -277,3 +277,50 @@ function sintese_schema_jsonld() {
     echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . '</script>' . "\n";
 }
 add_action('wp_head', 'sintese_schema_jsonld', 4);
+
+// ─── Newsletter REST API ──────────────────────────
+function sintese_register_subscribe_route() {
+    register_rest_route('sintese/v1', '/subscribe', [
+        'methods'             => 'POST',
+        'callback'            => 'sintese_handle_subscribe',
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'sintese_register_subscribe_route');
+
+function sintese_handle_subscribe($request) {
+    $email = sanitize_email($request->get_param('email'));
+
+    if (!is_email($email)) {
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => '❌ Email inválido.',
+        ], 400);
+    }
+
+    $subscribers = get_option('sintese_subscribers', []);
+
+    // Check duplicate
+    if (in_array($email, $subscribers, true)) {
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => '📧 Este email já está inscrito!',
+        ], 200);
+    }
+
+    // Rate limit: max 100 subscribers (free tier)
+    if (count($subscribers) >= 1000) {
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => '⚠️ Lista cheia. Tente novamente mais tarde.',
+        ], 429);
+    }
+
+    $subscribers[] = $email;
+    update_option('sintese_subscribers', $subscribers);
+
+    return new WP_REST_Response([
+        'success' => true,
+        'message' => '✅ Inscrito com sucesso! Obrigado.',
+    ], 200);
+}
