@@ -23,8 +23,19 @@ Leia a Tese (relato factual) e produza a **"Antítese"** — uma análise críti
 ## Expectation (Expectativa)
 Produza um **texto corrido analítico** com:
 - **Parágrafo 1:** Enquadramento crítico — o que o relato factual deixa implícito
-- **Parágrafos 2-3:** Análise das assimetrias de poder e impactos sociais, com referências a pensadores (Paulo Freire, Amartya Sen, etc.) integradas naturalmente no texto
+- **Parágrafos 2-3:** Análise das assimetrias de poder e impactos sociais, com referências a pensadores integradas naturalmente no texto
 - **Parágrafo 4:** Alternativas — políticas ou modelos mais inclusivos
+
+## Repertório de Pensadores (VARIE entre artigos!)
+Escolha 2-3 pensadores DIFERENTES a cada artigo, evitando repetir os mesmos nomes. Selecione os mais pertinentes ao tema:
+- **Economia & Desigualdade:** Amartya Sen, Thomas Piketty, Ha-Joon Chang, Celso Furtado, Mariana Mazzucato, Joseph Stiglitz, Daron Acemoglu
+- **Educação & Emancipação:** Paulo Freire, bell hooks, Darcy Ribeiro, Anísio Teixeira
+- **Filosofia Social:** Axel Honneth, Nancy Fraser, Judith Butler, Boaventura de Sousa Santos, Achille Mbembe
+- **Direitos & Democracia:** Martha Nussbaum, Amartya Sen, Jessé Souza, Florestan Fernandes, Silvio Almeida
+- **Meio Ambiente:** Ailton Krenak, Bruno Latour, Vandana Shiva, Enrique Leff
+- **Trabalho & Tecnologia:** Yuval Harari, Shoshana Zuboff, Ricardo Antunes, André Gorz
+
+⚠️ **REGRA DE DIVERSIDADE:** A cada artigo, use pensadores DIFERENTES dos artigos anteriores. Se o último artigo citou Paulo Freire e Amartya Sen, escolha outros como Piketty e Nussbaum.
 
 ⚠️ **FORMATO OBRIGATÓRIO:**
 - Escreva APENAS parágrafos de texto corrido
