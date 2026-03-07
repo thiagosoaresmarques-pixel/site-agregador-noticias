@@ -151,7 +151,7 @@ async function findOrCreateTags(tagNames) {
  * Convert content to clean HTML — handles both markdown and plain text
  * Strips residual markdown artifacts and ensures proper paragraph wrapping
  */
-function mdToHtml(content) {
+export function mdToHtml(content) {
     if (!content) return '';
 
     // Strip residual markdown formatting that Gemini might still produce
@@ -179,7 +179,7 @@ function mdToHtml(content) {
  * @param {Object} article - Article from pipeline with thesis, antithesis, synthesis, seo
  * @returns {string} HTML content with all dialectical sections
  */
-function buildDialecticalContent(article) {
+export function buildDialecticalContent(article) {
     const seo = article.seo || {};
     const parts = [];
 

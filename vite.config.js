@@ -14,4 +14,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  test: {
+    include: ['server/**/__tests__/**/*.test.js'],
+    globals: false,
+  },
 });

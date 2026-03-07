@@ -10,7 +10,8 @@
     "build": "vite build",
     "start": "node server/index.js",
     "start:prod": "npm run build && node server/index.js",
-    "test:pipeline": "node server/test-pipeline.js"
+    "test:pipeline": "node server/test-pipeline.js",
+    "test": "vitest run"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -33,6 +34,7 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "nodemon": "^3.1.14",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   }
 }
