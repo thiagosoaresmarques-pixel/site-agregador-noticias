@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.git/
+.gitignore
+*.md
+*.zip
+server/data/articles.json
+server/data/scheduler.json
+wordpress-theme/
