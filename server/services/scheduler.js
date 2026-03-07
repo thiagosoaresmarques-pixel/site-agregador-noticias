@@ -22,7 +22,7 @@ let isRunning = false;
 const DEFAULT_CONFIG = {
     enabled: true,
     cronExpression: '0 */6 * * *', // Every 6 hours
-    categories: ['politica'],
+    categories: ['politica', 'economia', 'tecnologia', 'ciencia', 'saude', 'educacao', 'meio-ambiente', 'internacional'],
     maxArticlesPerRun: 3,
     autoPublish: true,
     publishAsDraft: true,

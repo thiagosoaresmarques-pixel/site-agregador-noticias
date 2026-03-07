@@ -1,7 +1,8 @@
 <?php
 /**
- * Single Article Template — Dialectical Layout
+ * Single Article Template — Dialectical Layout (v2.0)
  * Shows Tese, Antítese, and Síntese in visually distinct sections
+ * with reading progress bar and scroll animations
  */
 get_header();
 
@@ -13,6 +14,9 @@ while (have_posts()) :
     $content = get_the_content();
     $sections = sintese_parse_sections($content);
 ?>
+
+<!-- Reading Progress Bar -->
+<div class="reading-progress-bar"></div>
 
 <!-- Article Header -->
 <div class="article-header">
@@ -50,7 +54,7 @@ while (have_posts()) :
             <!-- Dialectical Sections Detected (legacy markdown parsing) -->
 
             <?php if (!empty($sections['thesis'])) : ?>
-            <div class="dialectical-section section-thesis">
+            <div class="dialectical-section section-thesis animate-on-scroll">
                 <span class="section-badge">🔵 Tese — O Relato Factual</span>
                 <div class="section-content">
                     <?php echo wpautop($sections['thesis']); ?>
@@ -59,7 +63,7 @@ while (have_posts()) :
             <?php endif; ?>
 
             <?php if (!empty($sections['antithesis'])) : ?>
-            <div class="dialectical-section section-antithesis">
+            <div class="dialectical-section section-antithesis animate-on-scroll">
                 <span class="section-badge">🔴 Antítese — O Contra-Argumento</span>
                 <div class="section-content">
                     <?php echo wpautop($sections['antithesis']); ?>
@@ -68,7 +72,7 @@ while (have_posts()) :
             <?php endif; ?>
 
             <?php if (!empty($sections['synthesis'])) : ?>
-            <div class="dialectical-section section-synthesis">
+            <div class="dialectical-section section-synthesis animate-on-scroll">
                 <span class="section-badge">🟢 Síntese — Visão Integrada</span>
                 <div class="section-content">
                     <?php echo wpautop($sections['synthesis']); ?>
@@ -78,7 +82,7 @@ while (have_posts()) :
 
         <?php else : ?>
             <!-- Standard Content (no dialectical sections detected) -->
-            <div class="dialectical-section section-synthesis">
+            <div class="dialectical-section section-synthesis animate-on-scroll">
                 <span class="section-badge">🟢 Análise</span>
                 <div class="section-content">
                     <?php the_content(); ?>
@@ -87,8 +91,8 @@ while (have_posts()) :
         <?php endif; ?>
 
         <!-- Source Attribution -->
-        <div style="margin-top: var(--space-8); padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle);">
-            <p style="font-size: var(--font-size-sm); color: var(--text-muted); margin: 0;">
+        <div class="source-attribution animate-on-scroll">
+            <p>
                 ⚖️ Este artigo foi gerado pelo sistema <strong>Síntese News</strong> utilizando análise dialética automatizada
                 (Tese → Antítese → Síntese). As fontes originais são citadas ao longo do texto. 
                 O conteúdo foi revisado editorialmente antes da publicação.
@@ -111,13 +115,15 @@ while (have_posts()) :
                     $rcat_name = $rcat ? $rcat[0]->name : 'Geral';
                     $rcat_slug = $rcat ? $rcat[0]->slug : 'geral';
                 ?>
-                <article class="article-card">
+                <article class="article-card animate-on-scroll">
                     <?php if (has_post_thumbnail()) : ?>
                         <a href="<?php the_permalink(); ?>">
-                            <?php the_post_thumbnail('card-thumb', ['class' => 'card-image']); ?>
+                            <div class="card-image-wrapper">
+                                <?php the_post_thumbnail('card-thumb'); ?>
+                            </div>
                         </a>
                     <?php else : ?>
-                        <div class="card-image" style="display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text-muted);">⚖️</div>
+                        <div class="card-image-wrapper" style="display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text-muted);">⚖️</div>
                     <?php endif; ?>
                     <div class="card-body">
                         <span class="card-category" style="background:<?php echo sintese_category_color($rcat_slug); ?>"><?php echo esc_html($rcat_name); ?></span>

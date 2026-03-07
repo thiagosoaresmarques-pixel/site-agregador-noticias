@@ -1,6 +1,6 @@
 <?php
 /**
- * Archive/Category Template
+ * Archive/Category Template (v2.0)
  */
 get_header();
 ?>
@@ -34,13 +34,15 @@ get_header();
                 $cat_name = $cat ? $cat[0]->name : 'Geral';
                 $cat_slug = $cat ? $cat[0]->slug : 'geral';
         ?>
-        <article class="article-card">
+        <article class="article-card animate-on-scroll">
             <?php if (has_post_thumbnail()) : ?>
                 <a href="<?php the_permalink(); ?>">
-                    <?php the_post_thumbnail('card-thumb', ['class' => 'card-image']); ?>
+                    <div class="card-image-wrapper">
+                        <?php the_post_thumbnail('card-thumb'); ?>
+                    </div>
                 </a>
             <?php else : ?>
-                <div class="card-image" style="display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text-muted);">⚖️</div>
+                <div class="card-image-wrapper" style="display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text-muted);">⚖️</div>
             <?php endif; ?>
 
             <div class="card-body">

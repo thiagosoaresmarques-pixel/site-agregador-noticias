@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Síntese News — Theme Preview v2.0</title>
+    <script>
+        (function () {
+            var t = localStorage.getItem('sintese-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="sintese-news/style.css">
+    <style>
+        /* Preview notice */
+        .preview-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--accent-gradient);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 300;
+            font-family: var(--font-sans);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="preview-banner">🎨 PREVIEW MODE — Síntese News Theme v2.0</div>
+
+    <!-- Nav Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Reading Progress Bar -->
+    <div class="reading-progress-bar"></div>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-inner">
+                <div class="site-branding">
+                    <div>
+                        <div class="site-title"><a href="#">Síntese News</a></div>
+                        <div class="site-tagline">Todas as perspectivas, uma verdade</div>
+                    </div>
+                </div>
+
+                <nav class="main-nav" id="mainNav">
+                    <ul>
+                        <li><a href="#">Início</a></li>
+                        <li><a href="#">Política</a></li>
+                        <li><a href="#">Economia</a></li>
+                        <li><a href="#">Tecnologia</a></li>
+                        <li><a href="#">Ciência</a></li>
+                        <li><a href="#">Saúde</a></li>
+                    </ul>
+                </nav>
+
+                <div class="header-controls">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                    <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+
+            <!-- Hero -->
+            <article class="hero-article">
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <span class="hero-category" style="background: var(--cat-politica)">Política</span>
+                    <h2 class="hero-title">
+                        <a href="#" style="color: var(--text-primary); -webkit-text-fill-color: var(--text-primary);">
+                            Congresso debate nova reforma tributária com impactos diretos na classe média brasileira
+                        </a>
+                    </h2>
+                    <p class="hero-excerpt">Análise dialética completa das propostas em discussão e seus efeitos
+                        econômicos e sociais.</p>
+                    <div class="hero-meta">
+                        <span>📰 Síntese News</span>
+                        <span>📅 07/03/2026</span>
+                        <span>⏱ 8 min de leitura</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Dialectical Preview -->
+            <div class="dialectical-grid">
+                <div class="dialectical-card thesis animate-on-scroll">
+                    <span class="dialectical-badge thesis">🔵 Tese</span>
+                    <h3>O Relato Factual</h3>
+                    <p>Análise imparcial dos fatos, dados e declarações oficiais sobre o tema. O ponto de partida do
+                        processo dialético.</p>
+                </div>
+                <div class="dialectical-card antithesis animate-on-scroll">
+                    <span class="dialectical-badge antithesis">🔴 Antítese</span>
+                    <h3>O Contra-Argumento</h3>
+                    <p>Perspectivas negligenciadas, contradições ocultas e vozes dissidentes. O elemento de tensão
+                        necessário.</p>
+                </div>
+            </div>
+
+            <div class="synthesis-card animate-on-scroll">
+                <span class="dialectical-badge synthesis">🟢 Síntese</span>
+                <h3>Congresso debate nova reforma tributária</h3>
+                <div class="synthesis-text">
+                    A reforma proposta busca simplificar o sistema tributário brasileiro, mas enfrenta resistência de
+                    setores que temem aumento da carga fiscal. A análise dialética revela que o equilíbrio entre
+                    eficiência arrecadatória e justiça social é o maior desafio...
+                </div>
+                <a href="#" class="read-more">Ler Análise Completa →</a>
+            </div>
+
+            <!-- Articles Grid -->
+            <h2 class="articles-section-title">Últimas Análises</h2>
+
+            <div class="articles-grid">
+                <article class="article-card animate-on-scroll">
+                    <div class="card-image-wrapper">
+                        <div
+                            style="width:100%;height:100%;background:linear-gradient(135deg, var(--cat-economia) 0%, var(--bg-elevated) 100%);display:flex;align-items:center;justify-content:center;font-size:2rem;">
+                            💰</div>
+                    </div>
+                    <div class="card-body">
+                        <span class="card-category" style="background: var(--cat-economia)">Economia</span>
+                        <h3 class="card-title"><a href="#">PIB cresce 2.3% no primeiro trimestre sob nova política
+                                monetária</a></h3>
+                        <p class="card-excerpt">Banco Central mantém taxa Selic estável enquanto indicadores econômicos
+                            mostram sinais mistos.</p>
+                        <div class="card-meta">
+                            <span>06/03/2026</span>
+                            <span>Síntese News</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="article-card animate-on-scroll">
+                    <div class="card-image-wrapper">
+                        <div
+                            style="width:100%;height:100%;background:linear-gradient(135deg, var(--cat-tecnologia) 0%, var(--bg-elevated) 100%);display:flex;align-items:center;justify-content:center;font-size:2rem;">
+                            🤖</div>
+                    </div>
+                    <div class="card-body">
+                        <span class="card-category" style="background: var(--cat-tecnologia)">Tecnologia</span>
+                        <h3 class="card-title"><a href="#">IA generativa transforma o mercado de trabalho: oportunidades
+                                e desafios</a></h3>
+                        <p class="card-excerpt">Estudo revela que 40% das profissões serão impactadas pela inteligência
+                            artificial nos próximos 5 anos.</p>
+                        <div class="card-meta">
+                            <span>05/03/2026</span>
+                            <span>Síntese News</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="article-card animate-on-scroll">
+                    <div class="card-image-wrapper">
+                        <div
+                            style="width:100%;height:100%;background:linear-gradient(135deg, var(--cat-ciencia) 0%, var(--bg-elevated) 100%);display:flex;align-items:center;justify-content:center;font-size:2rem;">
+                            🔬</div>
+                    </div>
+                    <div class="card-body">
+                        <span class="card-category" style="background: var(--cat-ciencia)">Ciência</span>
+                        <h3 class="card-title"><a href="#">Pesquisadores brasileiros descobrem nova espécie na
+                                Amazônia</a></h3>
+                        <p class="card-excerpt">A descoberta reforça a importância da preservação ambiental e
+                            investimento em pesquisa científica.</p>
+                        <div class="card-meta">
+                            <span>04/03/2026</span>
+                            <span>Síntese News</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Single Article Preview (Dialectical Sections) -->
+            <h2 class="articles-section-title" style="margin-top: var(--space-10);">Preview: Artigo Dialético</h2>
+
+            <div class="dialectical-section section-thesis animate-on-scroll">
+                <span class="section-badge">🔵 Tese — O Relato Factual</span>
+                <div class="section-content">
+                    <p>O Congresso Nacional iniciou nesta semana as discussões sobre a nova reforma tributária, que
+                        promete unificar impostos sobre consumo em um IVA dual. Segundo dados do Ministério da Fazenda,
+                        a proposta poderia reduzir em até 15% a complexidade do sistema tributário brasileiro.</p>
+                    <p>O relator da proposta destacou que o modelo foi inspirado em experiências internacionais
+                        bem-sucedidas, citando a reforma tributária da Índia em 2017 como referência principal.</p>
+                </div>
+            </div>
+
+            <div class="dialectical-section section-antithesis animate-on-scroll">
+                <span class="section-badge">🔴 Antítese — O Contra-Argumento</span>
+                <div class="section-content">
+                    <p>Críticos apontam que a transição para o novo modelo pode gerar insegurança jurídica durante o
+                        período de implementação, estimado em até 10 anos. Representantes do setor de serviços alertam
+                        que a alíquota unificada pode representar aumento de carga para segmentos que hoje são menos
+                        tributados.</p>
+                    <blockquote>"A simplificação é bem-vinda, mas não pode vir às custas de setores já fragilizados pela
+                        crise econômica recente." — Associação Brasileira de Serviços</blockquote>
+                </div>
+            </div>
+
+            <div class="dialectical-section section-synthesis animate-on-scroll">
+                <span class="section-badge">🟢 Síntese — Visão Integrada</span>
+                <div class="section-content">
+                    <p>A reforma tributária representa um avanço necessário na modernização do Estado brasileiro, mas
+                        exige calibração cuidadosa. O princípio da subsidiariedade sugere que a implementação deve
+                        respeitar as particularidades regionais e setoriais, evitando soluções uniformes que ignorem a
+                        diversidade econômica do país.</p>
+                    <p>A verdadeira síntese não está na mera simplificação de alíquotas, mas na construção de um sistema
+                        que promova simultaneamente eficiência econômica e justiça distributiva — valores que, longe de
+                        serem contraditórios, são complementares quando orientados pelo bem comum.</p>
+                </div>
+            </div>
+
+            <!-- Source Attribution -->
+            <div class="source-attribution animate-on-scroll">
+                <p>⚖️ Este artigo foi gerado pelo sistema <strong>Síntese News</strong> utilizando análise dialética
+                    automatizada (Tese → Antítese → Síntese). As fontes originais são citadas ao longo do texto. O
+                    conteúdo foi revisado editorialmente antes da publicação.</p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-title">Síntese News</div>
+                    <p>Todas as perspectivas, uma verdade</p>
+                    <p style="margin-top: var(--space-4); font-size: var(--font-size-xs);">
+                        Notícias analisadas por IA dialética através da tríade Tese → Antítese → Síntese.
+                    </p>
+                </div>
+                <div class="footer-col">
+                    <h5>Categorias</h5>
+                    <ul>
+                        <li><a href="#">Política</a></li>
+                        <li><a href="#">Economia</a></li>
+                        <li><a href="#">Tecnologia</a></li>
+                        <li><a href="#">Ciência</a></li>
+                        <li><a href="#">Saúde</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Sobre</h5>
+                    <ul>
+                        <li><a href="#">Metodologia Dialética</a></li>
+                        <li><a href="#">Fontes &amp; Transparência</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Contato</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Tecnologia</h5>
+                    <ul>
+                        <li><a href="#">Gemini AI</a></li>
+                        <li><a href="#">Framework RISEN</a></li>
+                        <li><a href="#">API Pública</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Síntese News. Todas as perspectivas, uma verdade.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            'use strict';
+            var toggle = document.getElementById('themeToggle');
+            var icon = document.getElementById('themeIcon');
+            var html = document.documentElement;
+            function updateIcon() {
+                var theme = html.getAttribute('data-theme');
+                if (icon) icon.textContent = theme === 'light' ? '☀️' : '🌙';
+            }
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    var current = html.getAttribute('data-theme') || 'dark';
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    html.setAttribute('data-theme', next);
+                    localStorage.setItem('sintese-theme', next);
+                    updateIcon();
+                });
+            }
+            updateIcon();
+
+            var menuBtn = document.getElementById('menuToggle');
+            var nav = document.getElementById('mainNav');
+            var overlay = document.getElementById('navOverlay');
+            function closeMenu() {
+                if (menuBtn) menuBtn.classList.remove('active');
+                if (nav) nav.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            if (menuBtn) {
+                menuBtn.addEventListener('click', function () {
+                    var isOpen = nav && nav.classList.contains('active');
+                    if (isOpen) { closeMenu(); } else {
+                        menuBtn.classList.add('active');
+                        if (nav) nav.classList.add('active');
+                        if (overlay) overlay.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+            }
+            if (overlay) overlay.addEventListener('click', closeMenu);
+            if (nav) {
+                var links = nav.querySelectorAll('a');
+                for (var i = 0; i < links.length; i++) links[i].addEventListener('click', closeMenu);
+            }
+
+            var progressBar = document.querySelector('.reading-progress-bar');
+            if (progressBar) {
+                window.addEventListener('scroll', function () {
+                    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+                    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                    var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+                    progressBar.style.width = Math.min(progress, 100) + '%';
+                }, { passive: true });
+            }
+
+            var animElements = document.querySelectorAll('.animate-on-scroll');
+            if (animElements.length > 0 && 'IntersectionObserver' in window) {
+                var observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                animElements.forEach(function (el) { observer.observe(el); });
+            } else {
+                animElements.forEach(function (el) { el.classList.add('is-visible'); });
+            }
+        })();
+    </script>
+
+</body>
+
+</html>

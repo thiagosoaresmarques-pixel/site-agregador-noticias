@@ -1,18 +1,18 @@
 /*
 Theme Name: Síntese News
-Theme URI: https://sintesenews9.wordpress.com
+Theme URI: https://contradictio.com.br
 Description: Tema dialético premium para portal de notícias com análise Tese → Antítese → Síntese.
-Version: 1.0.0
+Version: 2.0.0
 Author: Dialética News
-Author URI: https://sintesenews9.wordpress.com
+Author URI: https://contradictio.com.br
 License: MIT
 Text Domain: sintese-news
-Tags: news, editorial, dark-mode, responsive, custom-colors
+Tags: news, editorial, dark-mode, light-mode, responsive, custom-colors
 
 Síntese News — "Todas as perspectivas, uma verdade"
 */
 
-/* ─── Design Tokens ─────────────────────────────── */
+/* ─── Design Tokens (Dark — Default) ────────────── */
 :root {
     /* Surfaces */
     --bg-primary: #0f172a;
@@ -50,6 +50,9 @@ Síntese News — "Todas as perspectivas, uma verdade"
     --cat-ciencia: #8b5cf6;
     --cat-saude: #10b981;
     --cat-esportes: #06b6d4;
+    --cat-educacao: #f97316;
+    --cat-meio-ambiente: #22c55e;
+    --cat-internacional: #a855f7;
 
     /* Spacing */
     --space-1: 0.25rem;
@@ -99,6 +102,27 @@ Síntese News — "Todas as perspectivas, uma verdade"
     --sidebar-width: 320px;
 }
 
+/* ─── Light Mode ────────────────────────────────── */
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-elevated: #f1f5f9;
+    --bg-glass: rgba(255, 255, 255, 0.88);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-inverse: #f1f5f9;
+    --border-subtle: rgba(15, 23, 42, 0.08);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.1);
+    --thesis-bg: rgba(59, 130, 246, 0.06);
+    --antithesis-bg: rgba(239, 68, 68, 0.06);
+    --synthesis-bg: rgba(16, 185, 129, 0.06);
+}
+
 /* ─── Reset & Base ──────────────────────────────── */
 *,
 *::before,
@@ -109,7 +133,7 @@ Síntese News — "Todas as perspectivas, uma verdade"
 }
 
 html {
-    font-size: 16px;
+    font-size: clamp(15px, 0.9vw + 0.5rem, 18px);
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -121,6 +145,7 @@ body {
     color: var(--text-primary);
     line-height: 1.7;
     min-height: 100vh;
+    transition: background var(--transition-slow), color var(--transition-slow);
 }
 
 a {
@@ -156,6 +181,7 @@ img {
     top: 0;
     z-index: 100;
     padding: var(--space-4) 0;
+    transition: background var(--transition-slow), border-color var(--transition-slow);
 }
 
 .header-inner {
@@ -195,6 +221,75 @@ img {
     text-transform: uppercase;
 }
 
+/* Header Controls (theme toggle + hamburger) */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.theme-toggle {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: rotate(15deg);
+}
+
+/* Hamburger Menu Button */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    padding: 10px;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    transition: all var(--transition-normal);
+    transform-origin: center;
+}
+
+.menu-toggle.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
 /* Navigation */
 .main-nav ul {
     display: flex;
@@ -216,6 +311,22 @@ img {
 .main-nav .current-menu-item a {
     color: var(--text-primary);
     background: rgba(139, 92, 246, 0.1);
+}
+
+/* Mobile Nav Overlay */
+.nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 90;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.nav-overlay.active {
+    opacity: 1;
 }
 
 /* ─── Hero Section ──────────────────────────────── */
@@ -266,7 +377,7 @@ img {
 }
 
 .hero-article .hero-title {
-    font-size: var(--font-size-4xl);
+    font-size: clamp(1.5rem, 3vw + 0.5rem, var(--font-size-4xl));
     font-weight: 800;
     line-height: 1.2;
     letter-spacing: -0.02em;
@@ -302,7 +413,7 @@ img {
     border-radius: var(--radius-lg);
     padding: var(--space-6);
     border: 1px solid var(--border-subtle);
-    transition: all var(--transition-normal);
+    transition: all var(--transition-normal), background var(--transition-slow);
     position: relative;
     overflow: hidden;
 }
@@ -456,7 +567,7 @@ img {
     border-radius: var(--radius-lg);
     overflow: hidden;
     border: 1px solid var(--border-subtle);
-    transition: all var(--transition-normal);
+    transition: all var(--transition-normal), background var(--transition-slow);
 }
 
 .article-card:hover {
@@ -510,6 +621,7 @@ img {
     line-height: 1.6;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -545,7 +657,7 @@ img {
 }
 
 .article-header h1 {
-    font-size: var(--font-size-4xl);
+    font-size: clamp(1.6rem, 3vw + 0.5rem, var(--font-size-4xl));
     font-weight: 800;
     line-height: 1.2;
     letter-spacing: -0.02em;
@@ -815,6 +927,121 @@ img {
     border-color: var(--accent);
 }
 
+/* ─── Reading Progress Bar ──────────────────────── */
+.reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: var(--accent-gradient);
+    z-index: 200;
+    transition: width 80ms linear;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+/* ─── Scroll Animations ─────────────────────────── */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Staggered delay for grid children */
+.animate-on-scroll:nth-child(2) {
+    transition-delay: 0.1s;
+}
+
+.animate-on-scroll:nth-child(3) {
+    transition-delay: 0.2s;
+}
+
+.animate-on-scroll:nth-child(4) {
+    transition-delay: 0.15s;
+}
+
+.animate-on-scroll:nth-child(5) {
+    transition-delay: 0.25s;
+}
+
+.animate-on-scroll:nth-child(6) {
+    transition-delay: 0.3s;
+}
+
+/* ─── Image Skeleton Shimmer ────────────────────── */
+.card-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: var(--bg-elevated);
+}
+
+.card-image-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 100%);
+    animation: shimmer 1.8s infinite;
+    z-index: 1;
+}
+
+.card-image-wrapper img {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-image-wrapper img.loaded {
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ─── Source Attribution Box ────────────────────── */
+.source-attribution {
+    margin-top: var(--space-8);
+    padding: var(--space-6);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    transition: background var(--transition-slow);
+}
+
+.source-attribution p {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
 /* ─── Responsive ────────────────────────────────── */
 @media (max-width: 1024px) {
     .article-layout {
@@ -831,6 +1058,52 @@ img {
 }
 
 @media (max-width: 768px) {
+
+    /* Hamburger visible */
+    .menu-toggle {
+        display: flex;
+    }
+
+    .nav-overlay {
+        display: block;
+    }
+
+    /* Mobile nav drawer */
+    .main-nav {
+        position: fixed;
+        top: 0;
+        right: -280px;
+        width: 280px;
+        height: 100vh;
+        background: var(--bg-secondary);
+        z-index: 95;
+        padding: var(--space-16) var(--space-6) var(--space-6);
+        transition: right var(--transition-normal);
+        overflow-y: auto;
+        border-left: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .main-nav.active {
+        right: 0;
+    }
+
+    .main-nav ul {
+        flex-direction: column;
+        gap: var(--space-1);
+    }
+
+    .main-nav a {
+        padding: var(--space-3) var(--space-4);
+        font-size: var(--font-size-base);
+        border-radius: var(--radius-md);
+    }
+
+    .main-nav a:hover {
+        background: rgba(139, 92, 246, 0.15);
+    }
+
+    /* Grid stacking */
     .dialectical-grid {
         grid-template-columns: 1fr;
     }
@@ -841,10 +1114,7 @@ img {
 
     .hero-article {
         min-height: 300px;
-    }
-
-    .hero-article .hero-title {
-        font-size: var(--font-size-2xl);
+        border-radius: var(--radius-md);
     }
 
     .article-header h1 {
@@ -852,16 +1122,109 @@ img {
     }
 
     .header-inner {
-        flex-direction: column;
-        gap: var(--space-3);
-    }
-
-    .main-nav ul {
-        flex-wrap: wrap;
-        justify-content: center;
+        flex-direction: row;
+        align-items: center;
     }
 
     .footer-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Dialectical sections */
+    .dialectical-section {
+        padding: var(--space-5);
+    }
+
+    .dialectical-section .section-content {
+        font-size: var(--font-size-base);
+    }
+}
+
+/* ─── Extra Small (480px) ──────────────────────── */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 var(--space-4);
+    }
+
+    .hero-article {
+        min-height: 240px;
+        margin: var(--space-4) 0;
+    }
+
+    .hero-article .hero-content {
+        padding: var(--space-5);
+    }
+
+    .hero-article .hero-excerpt {
+        display: none;
+    }
+
+    .dialectical-card {
+        padding: var(--space-4);
+    }
+
+    .synthesis-card {
+        padding: var(--space-5);
+    }
+
+    .article-card .card-body {
+        padding: var(--space-4);
+    }
+
+    .article-header {
+        margin: var(--space-6) auto var(--space-5);
+        padding: 0 var(--space-2);
+    }
+
+    .article-header .article-meta {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .sidebar-widget {
+        padding: var(--space-4);
+    }
+
+    .site-footer {
+        padding: var(--space-8) 0 var(--space-6);
+    }
+
+    .footer-grid {
+        gap: var(--space-6);
+    }
+
+    .share-btn {
+        width: 36px;
+        height: 36px;
+        font-size: var(--font-size-base);
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* ─── Print Styles ──────────────────────────────── */
+@media print {
+
+    .site-header,
+    .site-footer,
+    .reading-progress-bar,
+    .article-sidebar,
+    .share-buttons,
+    .theme-toggle,
+    .menu-toggle {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        color: black;
+    }
+
+    .dialectical-section {
+        break-inside: avoid;
     }
 }

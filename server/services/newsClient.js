@@ -41,6 +41,9 @@ const CATEGORY_MAP = {
     ciencia: { keyword: 'ciência' },
     saude: { keyword: 'saúde' },
     esportes: { keyword: 'futebol' },
+    educacao: { keyword: 'educação' },
+    'meio-ambiente': { keyword: 'meio ambiente' },
+    internacional: { keyword: 'geopolítica' },
 };
 
 /**

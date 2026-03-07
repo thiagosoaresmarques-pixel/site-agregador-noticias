@@ -1,6 +1,6 @@
 <?php
 /**
- * Síntese News — Theme Functions
+ * Síntese News — Theme Functions (v2.0)
  */
 
 // ─── Theme Setup ──────────────────────────────────
@@ -28,10 +28,10 @@ add_action('after_setup_theme', 'sintese_setup');
 
 // ─── Enqueue Styles & Fonts ───────────────────────
 function sintese_enqueue() {
-    // Google Fonts
+    // Google Fonts (Inter, Merriweather, JetBrains Mono)
     wp_enqueue_style(
         'google-fonts',
-        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap',
         [],
         null
     );
@@ -55,12 +55,15 @@ add_filter('excerpt_more', 'sintese_excerpt_more');
 // ─── Category Color Helper ────────────────────────
 function sintese_category_color($cat_slug) {
     $colors = [
-        'politica'    => 'var(--cat-politica)',
-        'economia'    => 'var(--cat-economia)',
-        'tecnologia'  => 'var(--cat-tecnologia)',
-        'ciencia'     => 'var(--cat-ciencia)',
-        'saude'       => 'var(--cat-saude)',
-        'esportes'    => 'var(--cat-esportes)',
+        'politica'       => 'var(--cat-politica)',
+        'economia'       => 'var(--cat-economia)',
+        'tecnologia'     => 'var(--cat-tecnologia)',
+        'ciencia'        => 'var(--cat-ciencia)',
+        'saude'          => 'var(--cat-saude)',
+        'esportes'       => 'var(--cat-esportes)',
+        'educacao'       => 'var(--cat-educacao)',
+        'meio-ambiente'  => 'var(--cat-meio-ambiente)',
+        'internacional'  => 'var(--cat-internacional)',
     ];
     return $colors[$cat_slug] ?? 'var(--accent)';
 }
@@ -107,3 +110,49 @@ function sintese_parse_sections($content) {
 
     return $sections;
 }
+
+// ─── Google Analytics (GA4) ───────────────────────
+function sintese_customizer_analytics($wp_customize) {
+    // Section
+    $wp_customize->add_section('sintese_analytics', [
+        'title'    => __('📊 Analytics', 'sintese-news'),
+        'priority' => 160,
+    ]);
+
+    // GA Measurement ID setting
+    $wp_customize->add_setting('sintese_ga_id', [
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+        'transport'         => 'postMessage',
+    ]);
+
+    $wp_customize->add_control('sintese_ga_id', [
+        'label'       => __('Google Analytics Measurement ID', 'sintese-news'),
+        'description' => __('Ex: G-XXXXXXXXXX (GA4). Deixe vazio para desativar.', 'sintese-news'),
+        'section'     => 'sintese_analytics',
+        'type'        => 'text',
+    ]);
+}
+add_action('customize_register', 'sintese_customizer_analytics');
+
+// Inject GA4 script in <head> (frontend only, not for admins)
+function sintese_ga_tracking() {
+    $ga_id = get_theme_mod('sintese_ga_id', '');
+    if (empty($ga_id) || is_admin() || current_user_can('manage_options')) {
+        return;
+    }
+    ?>
+    <!-- Google Analytics (GA4) — Síntese News -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc_attr($ga_id); ?>"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '<?php echo esc_js($ga_id); ?>', {
+            'anonymize_ip': true,
+            'cookie_flags': 'SameSite=None;Secure'
+        });
+    </script>
+    <?php
+}
+add_action('wp_head', 'sintese_ga_tracking', 1);
