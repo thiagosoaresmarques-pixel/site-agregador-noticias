@@ -20,7 +20,7 @@ let cronJob = null;
 let isRunning = false;
 
 const DEFAULT_CONFIG = {
-    enabled: false,
+    enabled: true,
     cronExpression: '0 */6 * * *', // Every 6 hours
     categories: ['politica'],
     maxArticlesPerRun: 3,
@@ -305,11 +305,12 @@ function getNextRunTime(cronExpr) {
 // ─── Auto-start on boot ──────────────────────────────────
 export function initScheduler() {
     const savedConfig = loadConfig();
-    if (savedConfig.enabled) {
-        console.log('[Scheduler] Auto-starting from saved config...');
-        config = { ...DEFAULT_CONFIG, ...savedConfig };
-        delete config.history;
-        history = savedConfig.history || [];
+    config = { ...DEFAULT_CONFIG, ...savedConfig };
+    delete config.history;
+    history = savedConfig.history || [];
+
+    if (config.enabled) {
+        console.log('[Scheduler] ⏰ Auto-starting scheduler on boot...');
         startScheduler();
     }
 }
