@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+server/data/articles.json
+server/data/scheduler.json
+*.log
+*.zip
+.DS_Store
+Thumbs.db

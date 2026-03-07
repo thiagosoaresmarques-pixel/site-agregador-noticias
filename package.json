@@ -1,0 +1,38 @@
+{
+  "name": "site-agregador-noticias",
+  "version": "1.0.0",
+  "description": "Portal de notícias dialéticas com análise via Gemini AI (Tese → Antítese → Síntese)",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "nodemon server/index.js",
+    "dev:client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "start:prod": "npm run build && node server/index.js",
+    "test:pipeline": "node server/test-pipeline.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "news",
+    "ai",
+    "gemini",
+    "dialectics"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "marked": "^17.0.4",
+    "node-cron": "^4.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14",
+    "vite": "^7.3.1"
+  }
+}
