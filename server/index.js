@@ -133,6 +133,24 @@ app.get('/api/articles/:id', (req, res) => {
 });
 
 // ─── WordPress Self-Hosted ────────────────────────────────
+// Update article content (editor save)
+app.put('/api/articles/:id', (req, res) => {
+    const article = getArticleById(req.params.id);
+    if (!article) {
+        return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const { thesis, antithesis, synthesis, seo } = req.body;
+    const updates = {};
+    if (thesis !== undefined) updates.thesis = thesis;
+    if (antithesis !== undefined) updates.antithesis = antithesis;
+    if (synthesis !== undefined) updates.synthesis = synthesis;
+    if (seo !== undefined) updates.seo = { ...article.seo, ...seo };
+
+    const updated = updateArticleStatus(article.id, article.status, updates);
+    res.json({ success: true, article: updated });
+});
+
 // Check WordPress connection status
 app.get('/api/wordpress/status', async (req, res) => {
     const status = await getStatus();

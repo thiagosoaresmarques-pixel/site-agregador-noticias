@@ -43,6 +43,9 @@ export const api = {
 
     getArticle: (id) => request(`/articles/${id}`),
 
+    updateArticle: (id, data) =>
+        request(`/articles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
     publishArticle: (id, asDraft = true) =>
         request(`/articles/${id}/publish`, {
             method: 'POST',
