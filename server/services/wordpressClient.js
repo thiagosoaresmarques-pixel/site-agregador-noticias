@@ -4,7 +4,7 @@
  * Target: contradictio.com.br
  */
 
-import { marked } from 'marked';
+// marked library no longer needed — mdToHtml uses custom sanitization
 
 const getWpUrl = () => process.env.WP_URL || 'https://contradictio.com.br';
 const getWpUser = () => process.env.WP_USER || 'admin';
@@ -148,11 +148,30 @@ async function findOrCreateTags(tagNames) {
 }
 
 /**
- * Convert markdown content to clean HTML
+ * Convert content to clean HTML — handles both markdown and plain text
+ * Strips residual markdown artifacts and ensures proper paragraph wrapping
  */
-function mdToHtml(markdown) {
-    if (!markdown) return '';
-    return marked.parse(markdown, { breaks: true });
+function mdToHtml(content) {
+    if (!content) return '';
+
+    // Strip residual markdown formatting that Gemini might still produce
+    let clean = content
+        .replace(/^#{1,6}\s+/gm, '')           // ## headers → plain text
+        .replace(/\*\*(.+?)\*\*/g, '$1')        // **bold** → plain
+        .replace(/\*(.+?)\*/g, '$1')            // *italic* → plain
+        .replace(/^[-*•]\s+/gm, '')             // bullet lists → plain text
+        .replace(/^\d+\.\s+/gm, '')             // numbered lists → plain text
+        .replace(/```[\s\S]*?```/g, '')         // code blocks → remove
+        .replace(/`(.+?)`/g, '$1')              // inline code → plain
+        .trim();
+
+    // Split into paragraphs and wrap in <p> tags
+    const paragraphs = clean
+        .split(/\n\s*\n/)                       // split on blank lines
+        .map(p => p.replace(/\n/g, ' ').trim()) // join single newlines
+        .filter(p => p.length > 0);
+
+    return paragraphs.map(p => `<p>${p}</p>`).join('\n');
 }
 
 /**
