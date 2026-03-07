@@ -15,6 +15,7 @@ import {
     getAllPipelineRuns,
     getArticles,
     getArticleById,
+    initArticleStorage,
 } from './services/pipeline.js';
 import { publishToWordPress, isAuthenticated, getStatus } from './services/wordpressClient.js';
 import { updateArticleStatus } from './services/pipeline.js';
@@ -50,7 +51,8 @@ if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../dist')));
 }
 
-// Initialize scheduler from saved config
+// Initialize storage and scheduler
+await initArticleStorage();
 initScheduler();
 
 // ─── Health Check ─────────────────────────────────────────

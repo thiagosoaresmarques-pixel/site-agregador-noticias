@@ -14,30 +14,106 @@ const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, '../data');
 const ARTICLES_FILE = path.join(DATA_DIR, 'articles.json');
 
+// ─── GCS Persistence Layer ────────────────────────────────
+const GCS_BUCKET = process.env.GCS_BUCKET || 'dialetica-news-data';
+const GCS_FILE = 'articles.json';
+const isProd = process.env.NODE_ENV === 'production';
+
 // In-memory pipeline status tracking
 const pipelineRuns = new Map();
 
+let gcsStorage = null;
+let gcsBucket = null;
+let articlesCache = null; // in-memory cache
+
+if (isProd) {
+    try {
+        const { Storage } = await import('@google-cloud/storage');
+        gcsStorage = new Storage();
+        gcsBucket = gcsStorage.bucket(GCS_BUCKET);
+        console.log(`[Storage] GCS enabled: gs://${GCS_BUCKET}/${GCS_FILE}`);
+    } catch (err) {
+        console.warn('[Storage] GCS not available, using local file:', err.message);
+    }
+}
+
 /**
- * Load articles from disk
+ * Load articles — GCS (production) or local file (development)
  */
+async function loadArticlesFromGCS() {
+    if (!gcsBucket) return null;
+    try {
+        const file = gcsBucket.file(GCS_FILE);
+        const [exists] = await file.exists();
+        if (!exists) return [];
+        const [content] = await file.download();
+        return JSON.parse(content.toString('utf-8'));
+    } catch (err) {
+        console.error('[Storage] GCS read error:', err.message);
+        return null;
+    }
+}
+
+async function saveArticlesToGCS(articles) {
+    if (!gcsBucket) return;
+    try {
+        const file = gcsBucket.file(GCS_FILE);
+        await file.save(JSON.stringify(articles, null, 2), { contentType: 'application/json' });
+    } catch (err) {
+        console.error('[Storage] GCS write error:', err.message);
+    }
+}
+
 function loadArticles() {
+    // Use cache if available
+    if (articlesCache !== null) return articlesCache;
+
+    // Load from local file
     if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     if (!fs.existsSync(ARTICLES_FILE)) {
         fs.writeFileSync(ARTICLES_FILE, '[]', 'utf-8');
     }
-    return JSON.parse(fs.readFileSync(ARTICLES_FILE, 'utf-8'));
+    articlesCache = JSON.parse(fs.readFileSync(ARTICLES_FILE, 'utf-8'));
+    return articlesCache;
 }
 
-/**
- * Save articles to disk
- */
 function saveArticles(articles) {
+    // Update cache
+    articlesCache = articles;
+
+    // Save to local file
     if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(ARTICLES_FILE, JSON.stringify(articles, null, 2), 'utf-8');
+
+    // Sync to GCS (async, non-blocking)
+    saveArticlesToGCS(articles);
+}
+
+/**
+ * Initialize: load from GCS into local cache on startup
+ */
+export async function initArticleStorage() {
+    if (!gcsBucket) return;
+    console.log('[Storage] Loading articles from GCS...');
+    const gcsArticles = await loadArticlesFromGCS();
+    if (gcsArticles && gcsArticles.length > 0) {
+        articlesCache = gcsArticles;
+        // Also save locally for fast access
+        if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+        fs.writeFileSync(ARTICLES_FILE, JSON.stringify(gcsArticles, null, 2), 'utf-8');
+        console.log(`[Storage] Loaded ${gcsArticles.length} articles from GCS`);
+    } else {
+        // If GCS is empty but local has data, sync up
+        const local = loadArticles();
+        if (local.length > 0) {
+            await saveArticlesToGCS(local);
+            console.log(`[Storage] Synced ${local.length} local articles to GCS`);
+        }
+    }
 }
 
 /**
