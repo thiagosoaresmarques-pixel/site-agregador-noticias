@@ -37,8 +37,10 @@ export function verifyToken(token) {
     const [payload, sig] = parts;
     const expectedSig = crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
 
-    // Timing-safe comparison
-    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
+    // Length check before timing-safe comparison (timingSafeEqual throws on length mismatch)
+    const sigBuf = Buffer.from(sig);
+    const expectedBuf = Buffer.from(expectedSig);
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
         return null;
     }
 
