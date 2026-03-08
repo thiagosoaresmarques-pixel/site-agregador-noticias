@@ -132,6 +132,7 @@ export async function fetchArticles({
             keyword: catConfig.keywords,
             keywordOper: catConfig.keywordOper || 'or',
             lang: language,
+            sourceLocationUri: ['http://en.wikipedia.org/wiki/Brazil'], // Only Brazilian sources
             articlesPage: 1,
             articlesCount: fetchCount,
             articlesSortBy: sortBy,
