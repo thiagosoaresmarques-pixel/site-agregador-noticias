@@ -252,6 +252,13 @@ async function uploadImageToWordPress(imageUrl, title, caption) {
         }
 
         const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+
+        // Validate it's actually an image
+        if (!contentType.startsWith('image/')) {
+            console.warn(`[WordPress] Not an image (${contentType}), skipping`);
+            return null;
+        }
+
         const buffer = Buffer.from(await imgResponse.arrayBuffer());
 
         // Determine file extension
@@ -259,15 +266,18 @@ async function uploadImageToWordPress(imageUrl, title, caption) {
         const ext = extMap[contentType] || 'jpg';
         const filename = `${title.replace(/[^a-zA-Z0-9-]/g, '-').substring(0, 60)}.${ext}`;
 
-        // Upload to WP Media Library
+        // Upload via multipart FormData (WordPress rejects raw binary Content-Disposition)
+        const formData = new FormData();
+        formData.append('file', new Blob([buffer], { type: contentType }), filename);
+        formData.append('title', title);
+        if (caption) formData.append('caption', caption);
+
         const response = await fetch(restUrl('/wp/v2/media'), {
             method: 'POST',
             headers: {
                 Authorization: getAuthHeader(),
-                'Content-Disposition': `attachment; filename="${filename}"`,
-                'Content-Type': contentType,
             },
-            body: buffer,
+            body: formData,
         });
 
         if (!response.ok) {
@@ -277,20 +287,7 @@ async function uploadImageToWordPress(imageUrl, title, caption) {
         }
 
         const media = await response.json();
-
-        // Update caption with source attribution
-        if (caption) {
-            await fetch(restUrl(`/wp/v2/media/${media.id}`), {
-                method: 'POST',
-                headers: {
-                    Authorization: getAuthHeader(),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ caption }),
-            });
-        }
-
-        console.log(`[WordPress] 🖼️ Image uploaded: ID ${media.id}`);
+        console.log(`[WordPress] 🖼️ Image uploaded: ID ${media.id} (${filename})`);
         return media.id;
     } catch (err) {
         console.warn(`[WordPress] Image upload error: ${err.message}`);
