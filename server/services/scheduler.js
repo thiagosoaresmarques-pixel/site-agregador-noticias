@@ -23,22 +23,17 @@ const DEFAULT_CONFIG = {
     enabled: true,
     cronExpression: '0 */6 * * *', // Every 6 hours
     categoryRuns: [
-        { category: 'politica', maxArticles: 5 },
-        { category: 'economia', maxArticles: 3 },
-        { category: 'tecnologia', maxArticles: 2 },
+        { category: 'politica', maxArticles: 8 },
+        { category: 'economia', maxArticles: 2 },
     ],
     // Full pool for rotation — scheduler cycles through these
-    categoryPool: [
-        'politica', 'economia', 'tecnologia', 'ciencia',
-        'saude', 'internacional', 'educacao', 'meio-ambiente',
-        'esportes', 'geral',
-    ],
+    categoryPool: ['politica', 'economia'],
     // How many categories from the pool per run
-    categoriesPerRun: 3,
+    categoriesPerRun: 2,
     // Rotation index — tracks which categories to pick next
     rotationIndex: 0,
     // Legacy field for backward compat
-    categories: ['politica', 'economia', 'tecnologia'],
+    categories: ['politica', 'economia'],
     maxArticlesPerRun: 10,
     autoPublish: true,
     publishAsDraft: false,
@@ -114,9 +109,10 @@ async function executeScheduledRun() {
     const categoryRuns = [];
     for (let i = 0; i < perRun; i++) {
         const idx = (startIdx + i) % pool.length;
+        // 80/20 distribution: first category gets 80%, rest share 20%
         const articlesForCat = i === 0
-            ? Math.ceil(totalArticles / perRun)
-            : Math.floor(totalArticles / perRun);
+            ? Math.round(totalArticles * 0.8)
+            : Math.max(1, Math.floor((totalArticles * 0.2) / (perRun - 1)));
         categoryRuns.push({ category: pool[idx], maxArticles: articlesForCat });
     }
 
