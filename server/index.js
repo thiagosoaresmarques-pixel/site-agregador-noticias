@@ -280,21 +280,79 @@ app.post('/api/scheduler/trigger', (req, res) => {
     res.json(result);
 });
 
-// ─── Stats ────────────────────────────────────────────────
+// ─── Stats & Analytics ────────────────────────────────────
 app.get('/api/stats', (req, res) => {
     const articles = getArticles();
     const runs = getAllPipelineRuns();
+    const history = getSchedulerHistory();
 
     const totalTokens = articles.reduce((sum, a) => sum + (a.tokens?.total || 0), 0);
+    const publishedArticles = articles.filter((a) => a.status === 'published');
+    const errorArticles = articles.filter((a) => a.status === 'error');
+
+    // Per-category breakdown
+    const categoryMap = {};
+    articles.forEach((a) => {
+        const cat = a.category || 'sem-categoria';
+        if (!categoryMap[cat]) categoryMap[cat] = { total: 0, published: 0, errors: 0, tokens: 0 };
+        categoryMap[cat].total++;
+        if (a.status === 'published') categoryMap[cat].published++;
+        if (a.status === 'error') categoryMap[cat].errors++;
+        categoryMap[cat].tokens += a.tokens?.total || 0;
+    });
+
+    // Daily timeline (last 7 days)
+    const timeline = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayArticles = articles.filter((a) => {
+            const created = a.timestamps?.created || a.timestamps?.fetched;
+            return created && created.startsWith(dateStr);
+        });
+        timeline.push({
+            date: dateStr,
+            label: d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
+            total: dayArticles.length,
+            published: dayArticles.filter((a) => a.status === 'published').length,
+            errors: dayArticles.filter((a) => a.status === 'error').length,
+        });
+    }
+
+    // Top sources
+    const sourceMap = {};
+    articles.forEach((a) => {
+        const src = a.rawSource || 'Desconhecido';
+        sourceMap[src] = (sourceMap[src] || 0) + 1;
+    });
+    const topSources = Object.entries(sourceMap)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+        .map(([name, count]) => ({ name, count }));
+
+    // Scheduler performance
+    const schedulerRuns = history.length;
+    const schedulerSuccess = history.filter((r) => r.status === 'complete').length;
 
     res.json({
         totalArticles: articles.length,
         draftArticles: articles.filter((a) => a.status === 'draft').length,
-        publishedArticles: articles.filter((a) => a.status === 'published').length,
-        errorArticles: articles.filter((a) => a.status === 'error').length,
+        publishedArticles: publishedArticles.length,
+        errorArticles: errorArticles.length,
         totalPipelineRuns: runs.length,
         totalTokensUsed: totalTokens,
         estimatedCost: `$${((totalTokens / 1000000) * 0.875).toFixed(4)}`,
+        avgTokensPerArticle: articles.length > 0 ? Math.round(totalTokens / articles.length) : 0,
+        errorRate: articles.length > 0 ? ((errorArticles.length / articles.length) * 100).toFixed(1) : '0.0',
+        categories: categoryMap,
+        timeline,
+        topSources,
+        scheduler: {
+            totalRuns: schedulerRuns,
+            successRate: schedulerRuns > 0 ? ((schedulerSuccess / schedulerRuns) * 100).toFixed(1) : '100',
+            lastRun: history[0] || null,
+        },
     });
 });
 

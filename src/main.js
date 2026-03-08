@@ -6,6 +6,7 @@ import { renderDashboard, cleanupDashboard } from './views/dashboard.js';
 import { renderArticles } from './views/articles.js';
 import { renderEditor } from './views/editor.js';
 import { renderSettings } from './views/settings.js';
+import { renderAnalytics } from './views/analytics.js';
 import { renderLogin } from './views/login.js';
 import { api, checkAuth, logout, isAuthenticated } from './api/client.js';
 
@@ -73,6 +74,9 @@ async function navigate() {
             break;
         case 'editor':
             renderEditor(viewContainer, param);
+            break;
+        case 'analytics':
+            renderAnalytics(viewContainer);
             break;
         case 'settings':
             renderSettings(viewContainer);
