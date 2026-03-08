@@ -22,13 +22,18 @@ let isRunning = false;
 const DEFAULT_CONFIG = {
     enabled: true,
     cronExpression: '0 */6 * * *', // Every 6 hours
-    categories: ['politica', 'economia', 'tecnologia', 'ciencia', 'saude', 'educacao', 'meio-ambiente', 'internacional'],
-    maxArticlesPerRun: 3,
+    categoryRuns: [
+        { category: 'politica', maxArticles: 8 },
+        { category: 'economia', maxArticles: 2 },
+    ],
+    // Legacy field for backward compat
+    categories: ['politica', 'economia'],
+    maxArticlesPerRun: 10,
     autoPublish: true,
-    publishAsDraft: true,
+    publishAsDraft: false,
     language: 'por',
-    period: '3days',
-    sortBy: 'date',
+    period: 'today',
+    sortBy: 'rel',
 };
 
 // ─── Persistence ──────────────────────────────────────────
@@ -82,59 +87,64 @@ async function executeScheduledRun() {
     const runRecord = {
         id: `sched-${Date.now()}`,
         startedAt: new Date().toISOString(),
-        category: null,
+        categories: [],
         articlesProcessed: 0,
         articlesPublished: 0,
         status: 'running',
         errors: [],
     };
 
-    // Pick a category (rotate through configured categories)
-    const categoryIndex = history.length % config.categories.length;
-    const category = config.categories[categoryIndex] || 'politica';
-    runRecord.category = category;
+    // Build category runs: use categoryRuns if available, else legacy single-category rotation
+    const categoryRuns = config.categoryRuns || config.categories.map(c => ({ category: c, maxArticles: config.maxArticlesPerRun }));
 
-    console.log(`\n[Scheduler] 🔄 Starting scheduled run — category: ${category}`);
+    console.log(`\n[Scheduler] 🔄 Starting scheduled run — ${categoryRuns.map(r => `${r.category}(${r.maxArticles})`).join(' + ')}`);
 
     try {
-        // Get articles before pipeline to know which are new
-        const articlesBefore = new Set(getArticles().map(a => a.id));
+        for (const run of categoryRuns) {
+            const { category, maxArticles } = run;
+            runRecord.categories.push(category);
 
-        // Run the pipeline
-        const runId = await runPipeline({
-            newsApiKey: process.env.NEWS_API_KEY,
-            category,
-            language: config.language,
-            maxArticles: config.maxArticlesPerRun,
-            sortBy: config.sortBy,
-            period: config.period,
-        });
+            console.log(`[Scheduler]   📂 Category: ${category} (${maxArticles} articles)`);
 
-        // Wait for pipeline to complete (poll status)
-        await waitForPipelineCompletion(runId);
+            // Get articles before pipeline to know which are new
+            const articlesBefore = new Set(getArticles().map(a => a.id));
 
-        // Find new articles created by this run
-        const allArticles = getArticles();
-        const newArticles = allArticles.filter(a => !articlesBefore.has(a.id) && a.status === 'draft');
-        runRecord.articlesProcessed = newArticles.length;
+            // Run the pipeline for this category
+            const runId = await runPipeline({
+                newsApiKey: process.env.NEWS_API_KEY,
+                category,
+                language: config.language,
+                maxArticles,
+                sortBy: config.sortBy,
+                period: config.period,
+            });
 
-        console.log(`[Scheduler] ✅ Pipeline complete — ${newArticles.length} new articles`);
+            // Wait for pipeline to complete
+            await waitForPipelineCompletion(runId);
 
-        // Auto-publish if enabled
-        if (config.autoPublish && isAuthenticated() && newArticles.length > 0) {
-            console.log(`[Scheduler] 📤 Auto-publishing ${newArticles.length} articles...`);
+            // Find new articles created by this run
+            const allArticles = getArticles();
+            const newArticles = allArticles.filter(a => !articlesBefore.has(a.id) && a.status === 'draft');
+            runRecord.articlesProcessed += newArticles.length;
 
-            for (const article of newArticles) {
-                try {
-                    await publishToWordPress({
-                        article,
-                        asDraft: config.publishAsDraft,
-                    });
-                    runRecord.articlesPublished++;
-                    console.log(`[Scheduler]   ✓ Published: ${article.seo?.title || article.rawTitle}`);
-                } catch (pubErr) {
-                    runRecord.errors.push(`Publish failed: ${article.rawTitle} — ${pubErr.message}`);
-                    console.error(`[Scheduler]   ✗ Failed: ${article.rawTitle} — ${pubErr.message}`);
+            console.log(`[Scheduler]   ✅ ${newArticles.length} new ${category} articles`);
+
+            // Auto-publish if enabled
+            if (config.autoPublish && isAuthenticated() && newArticles.length > 0) {
+                console.log(`[Scheduler]   📤 Publishing ${newArticles.length} articles...`);
+
+                for (const article of newArticles) {
+                    try {
+                        await publishToWordPress({
+                            article,
+                            asDraft: config.publishAsDraft,
+                        });
+                        runRecord.articlesPublished++;
+                        console.log(`[Scheduler]     ✓ Published: ${article.seo?.title || article.rawTitle}`);
+                    } catch (pubErr) {
+                        runRecord.errors.push(`Publish failed: ${article.rawTitle} — ${pubErr.message}`);
+                        console.error(`[Scheduler]     ✗ Failed: ${article.rawTitle} — ${pubErr.message}`);
+                    }
                 }
             }
         }

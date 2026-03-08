@@ -236,6 +236,69 @@ export function buildDialecticalContent(article) {
 }
 
 /**
+ * Upload an image from URL to WordPress Media Library
+ * @param {string} imageUrl - Source image URL
+ * @param {string} title - Image title
+ * @param {string} caption - Image caption (source attribution)
+ * @returns {Promise<number|null>} Media ID or null on failure
+ */
+async function uploadImageToWordPress(imageUrl, title, caption) {
+    try {
+        // Download the image
+        const imgResponse = await fetch(imageUrl);
+        if (!imgResponse.ok) {
+            console.warn(`[WordPress] Image download failed: ${imgResponse.status}`);
+            return null;
+        }
+
+        const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+        const buffer = Buffer.from(await imgResponse.arrayBuffer());
+
+        // Determine file extension
+        const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+        const ext = extMap[contentType] || 'jpg';
+        const filename = `${title.replace(/[^a-zA-Z0-9-]/g, '-').substring(0, 60)}.${ext}`;
+
+        // Upload to WP Media Library
+        const response = await fetch(restUrl('/wp/v2/media'), {
+            method: 'POST',
+            headers: {
+                Authorization: getAuthHeader(),
+                'Content-Disposition': `attachment; filename="${filename}"`,
+                'Content-Type': contentType,
+            },
+            body: buffer,
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            console.warn(`[WordPress] Image upload failed: ${response.status} — ${error.message || ''}`);
+            return null;
+        }
+
+        const media = await response.json();
+
+        // Update caption with source attribution
+        if (caption) {
+            await fetch(restUrl(`/wp/v2/media/${media.id}`), {
+                method: 'POST',
+                headers: {
+                    Authorization: getAuthHeader(),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ caption }),
+            });
+        }
+
+        console.log(`[WordPress] 🖼️ Image uploaded: ID ${media.id}`);
+        return media.id;
+    } catch (err) {
+        console.warn(`[WordPress] Image upload error: ${err.message}`);
+        return null;
+    }
+}
+
+/**
  * Publish an article to WordPress
  * @param {Object} options
  * @param {Object} options.article - Article data from pipeline
@@ -266,6 +329,21 @@ export async function publishToWordPress({ article, asDraft = true }) {
 
     if (categoryId) postData.categories = [categoryId];
     if (tagIds.length) postData.tags = tagIds;
+
+    // Upload featured image from source article
+    if (article.rawImage) {
+        const caption = article.rawSource
+            ? `Imagem: ${article.rawSource}`
+            : '';
+        const mediaId = await uploadImageToWordPress(
+            article.rawImage,
+            seo.title || article.rawTitle,
+            caption
+        );
+        if (mediaId) {
+            postData.featured_media = mediaId;
+        }
+    }
 
     try {
         console.log(`[WordPress] Publishing to ${getWpUrl()}: "${postData.title}" (${postData.status})`);
