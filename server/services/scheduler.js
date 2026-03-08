@@ -23,11 +23,22 @@ const DEFAULT_CONFIG = {
     enabled: true,
     cronExpression: '0 */6 * * *', // Every 6 hours
     categoryRuns: [
-        { category: 'politica', maxArticles: 8 },
-        { category: 'economia', maxArticles: 2 },
+        { category: 'politica', maxArticles: 5 },
+        { category: 'economia', maxArticles: 3 },
+        { category: 'tecnologia', maxArticles: 2 },
     ],
+    // Full pool for rotation — scheduler cycles through these
+    categoryPool: [
+        'politica', 'economia', 'tecnologia', 'ciencia',
+        'saude', 'internacional', 'educacao', 'meio-ambiente',
+        'esportes', 'geral',
+    ],
+    // How many categories from the pool per run
+    categoriesPerRun: 3,
+    // Rotation index — tracks which categories to pick next
+    rotationIndex: 0,
     // Legacy field for backward compat
-    categories: ['politica', 'economia'],
+    categories: ['politica', 'economia', 'tecnologia'],
     maxArticlesPerRun: 10,
     autoPublish: true,
     publishAsDraft: false,
@@ -94,10 +105,26 @@ async function executeScheduledRun() {
         errors: [],
     };
 
-    // Build category runs: use categoryRuns if available, else legacy single-category rotation
-    const categoryRuns = config.categoryRuns || config.categories.map(c => ({ category: c, maxArticles: config.maxArticlesPerRun }));
+    // Build category runs via rotation through the pool
+    const pool = config.categoryPool || config.categories || ['politica'];
+    const perRun = config.categoriesPerRun || 3;
+    const totalArticles = config.maxArticlesPerRun || 10;
+    const startIdx = config.rotationIndex || 0;
 
-    console.log(`\n[Scheduler] 🔄 Starting scheduled run — ${categoryRuns.map(r => `${r.category}(${r.maxArticles})`).join(' + ')}`);
+    const categoryRuns = [];
+    for (let i = 0; i < perRun; i++) {
+        const idx = (startIdx + i) % pool.length;
+        const articlesForCat = i === 0
+            ? Math.ceil(totalArticles / perRun)
+            : Math.floor(totalArticles / perRun);
+        categoryRuns.push({ category: pool[idx], maxArticles: articlesForCat });
+    }
+
+    // Advance rotation index for next run
+    config.rotationIndex = (startIdx + perRun) % pool.length;
+    saveConfig(config, history);
+
+    console.log(`\n[Scheduler] 🔄 Starting scheduled run (rotation ${startIdx}→${config.rotationIndex}) — ${categoryRuns.map(r => `${r.category}(${r.maxArticles})`).join(' + ')}`);
 
     try {
         for (const catRun of categoryRuns) {
