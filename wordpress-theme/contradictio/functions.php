@@ -325,3 +325,246 @@ function sintese_handle_subscribe($request) {
         'message' => '✅ Inscrito com sucesso! Obrigado.',
     ], 200);
 }
+
+// ─── Google AdSense ───────────────────────────────
+function sintese_customizer_adsense($wp_customize) {
+    // Section
+    $wp_customize->add_section('sintese_adsense', [
+        'title'    => __('💰 AdSense', 'sintese-news'),
+        'priority' => 161,
+    ]);
+
+    // Publisher ID (ca-pub-XXXXXXXXXX)
+    $wp_customize->add_setting('sintese_adsense_pub_id', [
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    $wp_customize->add_control('sintese_adsense_pub_id', [
+        'label'       => __('Publisher ID', 'sintese-news'),
+        'description' => __('Ex: ca-pub-5001150160313896. Deixe vazio para desativar todos os anúncios.', 'sintese-news'),
+        'section'     => 'sintese_adsense',
+        'type'        => 'text',
+    ]);
+
+    // In-Article ad slot
+    $wp_customize->add_setting('sintese_adsense_in_article', [
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    $wp_customize->add_control('sintese_adsense_in_article', [
+        'label'       => __('In-Article Ad Slot', 'sintese-news'),
+        'description' => __('data-ad-slot para anúncio entre seções dialéticas.', 'sintese-news'),
+        'section'     => 'sintese_adsense',
+        'type'        => 'text',
+    ]);
+
+    // Sidebar ad slot
+    $wp_customize->add_setting('sintese_adsense_sidebar', [
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    $wp_customize->add_control('sintese_adsense_sidebar', [
+        'label'       => __('Sidebar Ad Slot', 'sintese-news'),
+        'description' => __('data-ad-slot para anúncio na sidebar do artigo.', 'sintese-news'),
+        'section'     => 'sintese_adsense',
+        'type'        => 'text',
+    ]);
+
+    // Footer/Multiplex ad slot
+    $wp_customize->add_setting('sintese_adsense_footer', [
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    $wp_customize->add_control('sintese_adsense_footer', [
+        'label'       => __('Footer Ad Slot (Multiplex)', 'sintese-news'),
+        'description' => __('data-ad-slot para anúncio antes do footer.', 'sintese-news'),
+        'section'     => 'sintese_adsense',
+        'type'        => 'text',
+    ]);
+
+    // Google Ads Conversion Tag ID (AW-XXXXXXXXXX)
+    $wp_customize->add_setting('sintese_gads_tag_id', [
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    $wp_customize->add_control('sintese_gads_tag_id', [
+        'label'       => __('Google Ads Tag ID', 'sintese-news'),
+        'description' => __('Ex: AW-16651599167. Para rastreamento de conversões do Google Ads.', 'sintese-news'),
+        'section'     => 'sintese_adsense',
+        'type'        => 'text',
+    ]);
+}
+add_action('customize_register', 'sintese_customizer_adsense');
+
+// Inject AdSense script in <head> (enables Auto Ads + manual ad units)
+function sintese_adsense_head() {
+    $pub_id = get_theme_mod('sintese_adsense_pub_id', '');
+    if (empty($pub_id) || is_admin()) {
+        return;
+    }
+    ?>
+    <!-- Google AdSense — Contradictio -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<?php echo esc_attr($pub_id); ?>"
+         crossorigin="anonymous"></script>
+    <?php
+}
+add_action('wp_head', 'sintese_adsense_head', 2);
+
+// Inject Google Ads conversion tag in <head>
+function sintese_gads_head() {
+    $tag_id = get_theme_mod('sintese_gads_tag_id', '');
+    if (empty($tag_id) || is_admin()) {
+        return;
+    }
+    ?>
+    <!-- Google Ads Conversion Tracking — Contradictio -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc_attr($tag_id); ?>"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '<?php echo esc_js($tag_id); ?>');
+    </script>
+    <?php
+}
+add_action('wp_head', 'sintese_gads_head', 3);
+
+/**
+ * Render an AdSense ad container.
+ * @param string $slot_type One of: 'in_article', 'sidebar', 'footer'
+ * @param string $format    Ad format: 'auto', 'fluid', 'rectangle' (default: 'auto')
+ */
+function sintese_render_ad($slot_type, $format = 'auto') {
+    $pub_id = get_theme_mod('sintese_adsense_pub_id', '');
+    if (empty($pub_id) || is_admin()) {
+        return;
+    }
+
+    $slot_map = [
+        'in_article' => get_theme_mod('sintese_adsense_in_article', ''),
+        'sidebar'    => get_theme_mod('sintese_adsense_sidebar', ''),
+        'footer'     => get_theme_mod('sintese_adsense_footer', ''),
+    ];
+
+    $slot = $slot_map[$slot_type] ?? '';
+
+    // If no specific slot is configured, still render for Auto Ads
+    $slot_attr = $slot ? ' data-ad-slot="' . esc_attr($slot) . '"' : '';
+    $format_attr = $format === 'fluid' ? ' data-ad-layout="in-article" data-ad-format="fluid"' : ' data-ad-format="' . esc_attr($format) . '" data-full-width-responsive="true"';
+    ?>
+    <div class="ad-container ad-<?php echo esc_attr($slot_type); ?>">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="<?php echo esc_attr($pub_id); ?>"
+             <?php echo $slot_attr; ?>
+             <?php echo $format_attr; ?>></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+    <?php
+}
+
+// ─── SEO: Enhanced Robots.txt ─────────────────────
+function sintese_robots_txt($output, $public) {
+    if (!$public) return $output;
+
+    $site_url = get_site_url();
+    $output  = "User-agent: *\n";
+    $output .= "Allow: /\n";
+    $output .= "Disallow: /wp-admin/\n";
+    $output .= "Allow: /wp-admin/admin-ajax.php\n";
+    $output .= "Disallow: /wp-login.php\n";
+    $output .= "Disallow: /xmlrpc.php\n";
+    $output .= "Disallow: /wp-trackback.php\n";
+    $output .= "Disallow: /wp-includes/\n";
+    $output .= "Disallow: /*?s=\n";
+    $output .= "Disallow: /*?p=\n";
+    $output .= "Disallow: /tag/*/feed/\n";
+    $output .= "Disallow: /category/*/feed/\n\n";
+
+    // Googlebot-specific (faster crawl)
+    $output .= "User-agent: Googlebot\n";
+    $output .= "Allow: /\n\n";
+
+    // Bingbot
+    $output .= "User-agent: Bingbot\n";
+    $output .= "Allow: /\n\n";
+
+    // Block AI scrapers (optional but recommended)
+    $output .= "User-agent: GPTBot\n";
+    $output .= "Disallow: /\n\n";
+    $output .= "User-agent: ChatGPT-User\n";
+    $output .= "Disallow: /\n\n";
+    $output .= "User-agent: CCBot\n";
+    $output .= "Disallow: /\n\n";
+
+    $output .= "Sitemap: {$site_url}/wp-sitemap.xml\n";
+    $output .= "Sitemap: {$site_url}/news-sitemap.xml\n";
+
+    return $output;
+}
+add_filter('robots_txt', 'sintese_robots_txt', 10, 2);
+
+// Remove user sitemap (security: don't expose author usernames)
+add_filter('wp_sitemaps_add_provider', function($provider, $name) {
+    if ($name === 'users') return false;
+    return $provider;
+}, 10, 2);
+
+// ─── SEO: Google News Sitemap ─────────────────────
+function sintese_news_sitemap() {
+    $uri = strtok($_SERVER['REQUEST_URI'], '?');
+    if ($uri !== '/news-sitemap.xml') return;
+
+    header('Content-Type: application/xml; charset=UTF-8');
+    header('X-Robots-Tag: noindex');
+
+    $posts = get_posts([
+        'numberposts'  => 50,
+        'post_status'  => 'publish',
+        'orderby'      => 'date',
+        'order'        => 'DESC',
+        'date_query'   => [['after' => '2 days ago']],
+    ]);
+
+    echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' . "\n";
+    echo '        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">' . "\n";
+
+    foreach ($posts as $post) {
+        $url   = get_permalink($post);
+        $title = htmlspecialchars($post->post_title, ENT_XML1, 'UTF-8');
+        $date  = get_the_date('c', $post);
+        $lang  = 'pt';
+
+        echo "<url>\n";
+        echo "  <loc>{$url}</loc>\n";
+        echo "  <news:news>\n";
+        echo "    <news:publication>\n";
+        echo "      <news:name>Contradictio</news:name>\n";
+        echo "      <news:language>{$lang}</news:language>\n";
+        echo "    </news:publication>\n";
+        echo "    <news:publication_date>{$date}</news:publication_date>\n";
+        echo "    <news:title>{$title}</news:title>\n";
+        echo "  </news:news>\n";
+        echo "</url>\n";
+    }
+
+    echo "</urlset>\n";
+    exit;
+}
+add_action('init', 'sintese_news_sitemap');
+
+// ─── SEO: Ping Search Engines on Publish ──────────
+function sintese_ping_on_publish($new_status, $old_status, $post) {
+    if ($new_status !== 'publish' || $old_status === 'publish') return;
+    if ($post->post_type !== 'post') return;
+
+    $sitemap = urlencode(get_site_url() . '/wp-sitemap.xml');
+
+    // Ping Google
+    wp_remote_get("https://www.google.com/ping?sitemap={$sitemap}", ['blocking' => false, 'timeout' => 5]);
+
+    // Ping Bing/IndexNow
+    wp_remote_get("https://www.bing.com/ping?sitemap={$sitemap}", ['blocking' => false, 'timeout' => 5]);
+}
+add_action('transition_post_status', 'sintese_ping_on_publish', 10, 3);

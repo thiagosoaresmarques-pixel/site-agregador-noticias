@@ -1206,6 +1206,49 @@ img {
     }
 }
 
+/* ─── Ad Containers ────────────────────────────── */
+.ad-container {
+    margin: var(--space-6) 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    text-align: center;
+    overflow: hidden;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-slow);
+}
+
+.ad-container .adsbygoogle {
+    width: 100%;
+}
+
+.ad-in_article {
+    margin: var(--space-8) 0;
+    border-left: 4px solid var(--accent);
+}
+
+.ad-sidebar {
+    margin-bottom: var(--space-6);
+}
+
+.ad-footer {
+    margin: var(--space-8) 0;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+}
+
+@media (max-width: 480px) {
+    .ad-container {
+        padding: var(--space-2);
+        margin: var(--space-4) 0;
+        min-height: 60px;
+    }
+}
+
 /* ─── Print Styles ──────────────────────────────── */
 @media print {
 
@@ -1217,7 +1260,8 @@ img {
     .theme-toggle,
     .menu-toggle,
     .notif-bell,
-    .newsletter-cta {
+    .newsletter-cta,
+    .ad-container {
         display: none !important;
     }
 

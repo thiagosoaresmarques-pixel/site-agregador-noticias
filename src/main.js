@@ -6,9 +6,11 @@ import { renderDashboard, cleanupDashboard } from './views/dashboard.js';
 import { renderArticles } from './views/articles.js';
 import { renderEditor } from './views/editor.js';
 import { renderSettings } from './views/settings.js';
-import { api } from './api/client.js';
+import { renderLogin } from './views/login.js';
+import { api, checkAuth, logout, isAuthenticated } from './api/client.js';
 
 const viewContainer = document.getElementById('view-container');
+const sidebar = document.getElementById('sidebar');
 
 // ─── Router ───────────────────────────────────────────
 function getRoute() {
@@ -20,11 +22,39 @@ function getRoute() {
     };
 }
 
-function navigate() {
+async function navigate() {
     const { view, param } = getRoute();
 
     // Cleanup previous view
     cleanupDashboard();
+
+    // Check auth before rendering protected views
+    if (view !== 'login') {
+        const authStatus = await checkAuth();
+        if (authStatus.authRequired && !authStatus.authenticated) {
+            sidebar.style.display = 'none';
+            renderLogin(viewContainer, () => {
+                sidebar.style.display = '';
+                window.location.hash = '#/';
+                navigate();
+            });
+            return;
+        }
+    }
+
+    // Show sidebar for authenticated views
+    sidebar.style.display = '';
+
+    // Handle login route explicitly
+    if (view === 'login') {
+        sidebar.style.display = 'none';
+        renderLogin(viewContainer, () => {
+            sidebar.style.display = '';
+            window.location.hash = '#/';
+            navigate();
+        });
+        return;
+    }
 
     // Update nav active state
     document.querySelectorAll('.nav-link').forEach((link) => {
@@ -69,6 +99,17 @@ async function checkServerStatus() {
     }
 }
 
+// ─── Logout Button ────────────────────────────────────
+function setupLogout() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
+}
+
 // ─── WordPress OAuth Handler ──────────────────────────
 async function handleWordPressOAuth() {
     const params = new URLSearchParams(window.location.search);
@@ -99,6 +140,7 @@ async function handleWordPressOAuth() {
 window.addEventListener('hashchange', navigate);
 window.addEventListener('load', () => {
     handleWordPressOAuth();
+    setupLogout();
     navigate();
     checkServerStatus();
     // Check server status every 30s

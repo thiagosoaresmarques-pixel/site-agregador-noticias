@@ -40,6 +40,9 @@
             </div>
         </div>
 
+        <?php // ── Footer Ad (Multiplex) ── ?>
+        <?php sintese_render_ad('footer', 'auto'); ?>
+
         <!-- Newsletter CTA -->
         <div class="newsletter-cta" id="newsletterSection">
             <div class="newsletter-inner">
@@ -200,6 +203,14 @@
                 if (data.success) {
                     nlEmail.value = '';
                     nlBtn.textContent = '✓';
+                    // Google Ads conversion tracking
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'conversion', {
+                            'send_to': 'AW-16651599167/0wN6CIqI4vwbEL_6jIQ-',
+                            'value': 1.0,
+                            'currency': 'BRL'
+                        });
+                    }
                 } else {
                     nlBtn.textContent = 'Inscrever';
                     nlBtn.disabled = false;

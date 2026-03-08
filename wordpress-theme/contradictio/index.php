@@ -80,6 +80,9 @@ get_header();
     endif;
     ?>
 
+    <?php // ── In-Feed Ad ── ?>
+    <?php sintese_render_ad('in_article', 'auto'); ?>
+
     <!-- ─── Articles Grid ──────────────────────────── -->
     <h2 class="articles-section-title">Últimas Análises</h2>
 

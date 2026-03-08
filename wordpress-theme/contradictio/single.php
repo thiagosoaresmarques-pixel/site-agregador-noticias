@@ -71,6 +71,9 @@ while (have_posts()) :
             </div>
             <?php endif; ?>
 
+            <?php // ── In-Article Ad (between Antítese and Síntese) ── ?>
+            <?php sintese_render_ad('in_article', 'fluid'); ?>
+
             <?php if (!empty($sections['synthesis'])) : ?>
             <div class="dialectical-section section-synthesis animate-on-scroll">
                 <span class="section-badge">🟢 Síntese — Visão Integrada</span>
@@ -178,6 +181,9 @@ while (have_posts()) :
                 <span style="color:var(--synthesis-color)">Síntese</span> integra as perspectivas em uma visão superior.
             </p>
         </div>
+
+        <?php // ── Sidebar Ad ── ?>
+        <?php sintese_render_ad('sidebar', 'auto'); ?>
 
         <?php if (is_active_sidebar('article-sidebar')) : ?>
             <?php dynamic_sidebar('article-sidebar'); ?>

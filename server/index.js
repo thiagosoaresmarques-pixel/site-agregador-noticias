@@ -8,6 +8,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { requireAuth, createToken, verifyToken } from './middleware/auth.js';
 import { initGemini } from './services/geminiClient.js';
 import {
     runPipeline,
@@ -37,6 +38,7 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(requireAuth);
 
 // Initialize Gemini if key is available
 if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here') {
@@ -55,6 +57,30 @@ if (process.env.NODE_ENV === 'production') {
 await initArticleStorage();
 initScheduler();
 
+// ─── Auth ─────────────────────────────────────────────────
+app.post('/api/auth/login', (req, res) => {
+    const { password } = req.body;
+    if (!process.env.DASHBOARD_PASSWORD) {
+        return res.json({ success: true, token: createToken(), message: 'Auth disabled (no password set)' });
+    }
+    if (password !== process.env.DASHBOARD_PASSWORD) {
+        return res.status(401).json({ error: 'Senha incorreta' });
+    }
+    res.json({ success: true, token: createToken() });
+});
+
+app.get('/api/auth/check', (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!process.env.DASHBOARD_PASSWORD) {
+        return res.json({ authenticated: true, authRequired: false });
+    }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.json({ authenticated: false, authRequired: true });
+    }
+    const payload = verifyToken(authHeader.slice(7));
+    res.json({ authenticated: !!payload, authRequired: true });
+});
+
 // ─── Health Check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => {
     res.json({
@@ -64,6 +90,7 @@ app.get('/api/health', (req, res) => {
         newsApiConfigured: !!(process.env.NEWS_API_KEY && process.env.NEWS_API_KEY !== 'your_newsapi_ai_key_here'),
         wordpressConfigured: !!(process.env.WP_URL),
         wordpressConnected: isAuthenticated(),
+        authEnabled: !!process.env.DASHBOARD_PASSWORD,
     });
 });
 
@@ -283,5 +310,6 @@ app.listen(PORT, () => {
     const isProd = process.env.NODE_ENV === 'production';
     console.log(`\n🔮 Dialética News Server running on http://localhost:${PORT}`);
     console.log(`📊 Dashboard: ${isProd ? `http://localhost:${PORT}` : 'http://localhost:5173'}`);
-    console.log(`💚 Health: http://localhost:${PORT}/api/health\n`);
+    console.log(`💚 Health: http://localhost:${PORT}/api/health`);
+    console.log(`🔐 Auth: ${process.env.DASHBOARD_PASSWORD ? 'ENABLED' : 'DISABLED (set DASHBOARD_PASSWORD)'}\n`);
 });
