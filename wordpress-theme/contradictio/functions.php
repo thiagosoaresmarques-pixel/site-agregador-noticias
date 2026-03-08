@@ -1,6 +1,6 @@
 <?php
 /**
- * Síntese News — Theme Functions (v2.0)
+ * Contradictio — Theme Functions (v2.0)
  */
 
 // ─── Theme Setup ──────────────────────────────────
@@ -188,20 +188,20 @@ add_action('wp_footer', 'sintese_register_sw', 99);
 // ─── Open Graph & Twitter Meta ────────────────────
 function sintese_og_meta() {
     $site_name = get_bloginfo('name');
-    $icon_url = get_template_directory_uri() . '/assets/icon-512.png';
+    $og_image = get_template_directory_uri() . '/assets/og-default.png';
 
     if (is_single()) {
         global $post;
         $title = get_the_title($post);
         $desc = has_excerpt($post) ? get_the_excerpt($post) : wp_trim_words(strip_tags($post->post_content), 30);
         $url = get_permalink($post);
-        $image = get_the_post_thumbnail_url($post, 'hero-image') ?: $icon_url;
+        $image = get_the_post_thumbnail_url($post, 'hero-image') ?: $og_image;
         $type = 'article';
     } else {
         $title = $site_name;
         $desc = get_bloginfo('description');
         $url = home_url('/');
-        $image = $icon_url;
+        $image = $og_image;
         $type = 'website';
     }
     ?>
@@ -226,11 +226,12 @@ add_action('wp_head', 'sintese_og_meta', 3);
 function sintese_schema_jsonld() {
     $site_name = get_bloginfo('name');
     $site_url = home_url('/');
+    $og_image = get_template_directory_uri() . '/assets/og-default.png';
     $icon_url = get_template_directory_uri() . '/assets/icon-512.png';
 
     if (is_single()) {
         global $post;
-        $image = get_the_post_thumbnail_url($post, 'hero-image') ?: $icon_url;
+        $image = get_the_post_thumbnail_url($post, 'hero-image') ?: $og_image;
         $cats = get_the_category($post->ID);
         $cat_name = !empty($cats) ? $cats[0]->name : 'Notícias';
 
