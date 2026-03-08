@@ -31,19 +31,61 @@ function getProcessedUrls() {
 }
 
 /**
- * Map category names to NewsAPI.ai concepts/keywords
+ * Map category names to NewsAPI.ai filters
+ * Uses BOTH categoryUri (broad) + keywords (specific) + ignore (exclusion)
  */
 const CATEGORY_MAP = {
-    geral: { keyword: 'Brasil' },
-    politica: { keyword: 'política' },
-    tecnologia: { keyword: 'tecnologia' },
-    economia: { keyword: 'economia' },
-    ciencia: { keyword: 'ciência' },
-    saude: { keyword: 'saúde' },
-    esportes: { keyword: 'futebol' },
-    educacao: { keyword: 'educação' },
-    'meio-ambiente': { keyword: 'meio ambiente' },
-    internacional: { keyword: 'geopolítica' },
+    geral: {
+        keywords: ['Brasil'],
+        keywordOper: 'or',
+    },
+    politica: {
+        categoryUri: 'news/Politics',
+        keywords: ['política', 'governo', 'congresso', 'senado', 'eleições', 'legislação'],
+        keywordOper: 'or',
+        ignoreKeywords: ['futebol', 'campeonato', 'NBA'],
+    },
+    economia: {
+        categoryUri: 'news/Business',
+        keywords: ['economia', 'PIB', 'inflação', 'Selic', 'mercado financeiro', 'fiscal', 'dólar', 'IBGE', 'emprego'],
+        keywordOper: 'or',
+        ignoreKeywords: ['futebol', 'campeonato', 'gol', 'Fórmula 1', 'Indy', 'UFC', 'homicídio', 'assassinato', 'preso'],
+    },
+    tecnologia: {
+        categoryUri: 'news/Technology',
+        keywords: ['tecnologia', 'inteligência artificial', 'startup', 'inovação', 'software', 'cibersegurança'],
+        keywordOper: 'or',
+    },
+    ciencia: {
+        categoryUri: 'news/Science',
+        keywords: ['ciência', 'pesquisa científica', 'universidade', 'NASA', 'descoberta'],
+        keywordOper: 'or',
+    },
+    saude: {
+        categoryUri: 'news/Health',
+        keywords: ['saúde', 'SUS', 'vacina', 'pandemia', 'medicina', 'hospital'],
+        keywordOper: 'or',
+    },
+    esportes: {
+        categoryUri: 'news/Sports',
+        keywords: ['futebol', 'Brasileirão', 'Copa', 'Olimpíadas', 'esporte'],
+        keywordOper: 'or',
+    },
+    educacao: {
+        keywords: ['educação', 'escola', 'universidade', 'ENEM', 'MEC', 'ensino'],
+        keywordOper: 'or',
+        ignoreKeywords: ['futebol', 'campeonato'],
+    },
+    'meio-ambiente': {
+        categoryUri: 'news/Environment',
+        keywords: ['meio ambiente', 'desmatamento', 'clima', 'sustentabilidade', 'Amazônia', 'poluição'],
+        keywordOper: 'or',
+    },
+    internacional: {
+        keywords: ['geopolítica', 'ONU', 'diplomacia', 'relações internacionais', 'guerra', 'G20'],
+        keywordOper: 'or',
+        ignoreKeywords: ['futebol', 'campeonato'],
+    },
 };
 
 /**
@@ -79,7 +121,7 @@ export async function fetchArticles({
         const dateEnd = new Date().toISOString().split('T')[0];
         const dateStart = getStartDate(period);
 
-        // Get category keywords
+        // Get category config with multi-layered filtering
         const catConfig = CATEGORY_MAP[category] || CATEGORY_MAP.geral;
 
         // Fetch more articles than needed to account for dedup filtering
@@ -87,7 +129,8 @@ export async function fetchArticles({
 
         const requestBody = {
             action: 'getArticles',
-            keyword: catConfig.keyword,
+            keyword: catConfig.keywords,
+            keywordOper: catConfig.keywordOper || 'or',
             lang: language,
             articlesPage: 1,
             articlesCount: fetchCount,
@@ -100,6 +143,16 @@ export async function fetchArticles({
             apiKey: apiKey,
         };
 
+        // Add category URI for broad topic filtering
+        if (catConfig.categoryUri) {
+            requestBody.categoryUri = catConfig.categoryUri;
+        }
+
+        // Add negative keywords to exclude off-topic articles
+        if (catConfig.ignoreKeywords) {
+            requestBody.ignoreKeyword = catConfig.ignoreKeywords;
+        }
+
         // Add source filter if specified
         if (sourceFilter) {
             requestBody.sourceUri = sourceFilter
@@ -108,7 +161,7 @@ export async function fetchArticles({
                 .filter(Boolean);
         }
 
-        console.log(`[NewsClient] Fetching "${catConfig.keyword}" (${language}), period: ${dateStart}→${dateEnd}, sort: ${sortBy}, max: ${maxArticles}`);
+        console.log(`[NewsClient] Fetching "${category}" [${catConfig.categoryUri || 'no-cat'}] keywords: ${catConfig.keywords.join(', ')} (${language}), period: ${dateStart}→${dateEnd}, sort: ${sortBy}, max: ${maxArticles}`);
 
         const response = await fetch(`${NEWS_API_BASE}/article/getArticles`, {
             method: 'POST',
