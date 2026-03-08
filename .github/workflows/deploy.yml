@@ -60,6 +60,15 @@ jobs:
             --project=${{ env.PROJECT_ID }} \
             --allow-unauthenticated \
             --min-instances=1 \
+            --set-env-vars="NODE_ENV=production,DASHBOARD_PASSWORD=${{ secrets.DASHBOARD_PASSWORD }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},GEMINI_MODEL=${{ secrets.GEMINI_MODEL }},NEWS_API_KEY=${{ secrets.NEWS_API_KEY }},WP_URL=${{ secrets.WP_URL }},WP_USER=${{ secrets.WP_USER }}" \
+            --quiet
+
+      - name: Restore secrets with spaces
+        run: |
+          gcloud run services update ${{ env.SERVICE }} \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --update-env-vars="WP_APP_PASSWORD=${{ secrets.WP_APP_PASSWORD }}" \
             --quiet
 
       - name: Show URL
