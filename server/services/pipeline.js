@@ -5,6 +5,7 @@
 
 import { generateThesis, generateAntithesis, generateSynthesis, generateSEO } from './geminiClient.js';
 import { fetchArticles } from './newsClient.js';
+import { publishToWordPress, isAuthenticated } from './wordpressClient.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -163,7 +164,7 @@ export function getAllPipelineRuns() {
 /**
  * Execute the full dialectical pipeline for a set of news articles
  */
-export async function runPipeline({ newsApiKey, category = 'politica', language = 'por', maxArticles = 5, sortBy = 'date', period = '3days', sourceFilter = '', skipDuplicates = true }) {
+export async function runPipeline({ newsApiKey, category = 'politica', language = 'por', maxArticles = 5, sortBy = 'date', period = '3days', sourceFilter = '', skipDuplicates = true, autoPublish = true }) {
     const runId = `run-${Date.now()}`;
     const status = {
         id: runId,
@@ -172,6 +173,7 @@ export async function runPipeline({ newsApiKey, category = 'politica', language 
         startedAt: new Date().toISOString(),
         completedAt: null,
         articlesProcessed: 0,
+        articlesPublished: 0,
         totalArticles: 0,
         currentArticle: null,
         tokens: { input: 0, output: 0, total: 0 },
@@ -182,7 +184,7 @@ export async function runPipeline({ newsApiKey, category = 'politica', language 
     pipelineRuns.set(runId, status);
 
     // Run in background (non-blocking)
-    processPipeline(runId, { newsApiKey, category, language, maxArticles, sortBy, period, sourceFilter, skipDuplicates }).catch((err) => {
+    processPipeline(runId, { newsApiKey, category, language, maxArticles, sortBy, period, sourceFilter, skipDuplicates, autoPublish }).catch((err) => {
         const run = pipelineRuns.get(runId);
         if (run) {
             run.status = 'error';
@@ -196,7 +198,7 @@ export async function runPipeline({ newsApiKey, category = 'politica', language 
 /**
  * Internal: Process the full pipeline
  */
-async function processPipeline(runId, { newsApiKey, category, language, maxArticles, sortBy, period, sourceFilter, skipDuplicates }) {
+async function processPipeline(runId, { newsApiKey, category, language, maxArticles, sortBy, period, sourceFilter, skipDuplicates, autoPublish }) {
     const run = pipelineRuns.get(runId);
 
     try {
@@ -292,6 +294,26 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
 
             articles.push(article);
             run.articlesProcessed = i + 1;
+
+            // Auto-publish to WordPress if enabled
+            if (autoPublish && article.status === 'draft' && isAuthenticated()) {
+                try {
+                    updateStage(run, `publish-${i}`, 'in_progress');
+                    run.stage = 'publishing';
+                    const result = await publishToWordPress({ article, asDraft: false });
+                    if (result.success) {
+                        article.status = 'published';
+                        article.wpPostId = result.postId;
+                        article.wpPostUrl = result.postUrl;
+                        run.articlesPublished = (run.articlesPublished || 0) + 1;
+                        console.log(`[Pipeline] 📤 Published: ${article.seo?.title || article.rawTitle}`);
+                    }
+                    updateStage(run, `publish-${i}`, 'complete');
+                } catch (pubErr) {
+                    run.errors.push(`Publish: ${pubErr.message}`);
+                    console.error(`[Pipeline] Publish error: ${pubErr.message}`);
+                }
+            }
         }
 
         saveArticles(articles);

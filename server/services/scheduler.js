@@ -100,16 +100,13 @@ async function executeScheduledRun() {
     console.log(`\n[Scheduler] 🔄 Starting scheduled run — ${categoryRuns.map(r => `${r.category}(${r.maxArticles})`).join(' + ')}`);
 
     try {
-        for (const run of categoryRuns) {
-            const { category, maxArticles } = run;
+        for (const catRun of categoryRuns) {
+            const { category, maxArticles } = catRun;
             runRecord.categories.push(category);
 
             console.log(`[Scheduler]   📂 Category: ${category} (${maxArticles} articles)`);
 
-            // Get articles before pipeline to know which are new
-            const articlesBefore = new Set(getArticles().map(a => a.id));
-
-            // Run the pipeline for this category
+            // Run the pipeline with auto-publish enabled (pipeline handles publishing internally)
             const runId = await runPipeline({
                 newsApiKey: process.env.NEWS_API_KEY,
                 category,
@@ -117,36 +114,20 @@ async function executeScheduledRun() {
                 maxArticles,
                 sortBy: config.sortBy,
                 period: config.period,
+                autoPublish: config.autoPublish,
             });
 
             // Wait for pipeline to complete
             await waitForPipelineCompletion(runId);
 
-            // Find new articles created by this run
-            const allArticles = getArticles();
-            const newArticles = allArticles.filter(a => !articlesBefore.has(a.id) && a.status === 'draft');
-            runRecord.articlesProcessed += newArticles.length;
-
-            console.log(`[Scheduler]   ✅ ${newArticles.length} new ${category} articles`);
-
-            // Auto-publish if enabled
-            if (config.autoPublish && isAuthenticated() && newArticles.length > 0) {
-                console.log(`[Scheduler]   📤 Publishing ${newArticles.length} articles...`);
-
-                for (const article of newArticles) {
-                    try {
-                        await publishToWordPress({
-                            article,
-                            asDraft: config.publishAsDraft,
-                        });
-                        runRecord.articlesPublished++;
-                        console.log(`[Scheduler]     ✓ Published: ${article.seo?.title || article.rawTitle}`);
-                    } catch (pubErr) {
-                        runRecord.errors.push(`Publish failed: ${article.rawTitle} — ${pubErr.message}`);
-                        console.error(`[Scheduler]     ✗ Failed: ${article.rawTitle} — ${pubErr.message}`);
-                    }
-                }
+            // Count results from pipeline run
+            const pipelineStatus = getPipelineStatus(runId);
+            if (pipelineStatus) {
+                runRecord.articlesProcessed += pipelineStatus.articlesProcessed || 0;
+                runRecord.articlesPublished += pipelineStatus.articlesPublished || 0;
             }
+
+            console.log(`[Scheduler]   ✅ ${category} done — ${pipelineStatus?.articlesProcessed || 0} processed, ${pipelineStatus?.articlesPublished || 0} published`);
         }
 
         runRecord.status = runRecord.errors.length > 0 ? 'partial' : 'complete';
