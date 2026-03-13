@@ -6,6 +6,7 @@
 import { generateThesis, generateAntithesis, generateSynthesis, generateSEO } from './geminiClient.js';
 import { fetchArticles } from './newsClient.js';
 import { publishToWordPress, isAuthenticated } from './wordpressClient.js';
+import { postTweet, isTwitterConfigured } from './twitterClient.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -326,6 +327,24 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
                 } catch (pubErr) {
                     run.errors.push(`Publish: ${pubErr.message}`);
                     console.error(`[Pipeline] Publish error: ${pubErr.message}`);
+                }
+            }
+
+            // Auto-post to X/Twitter if enabled and article was published
+            if (article.status === 'published' && isTwitterConfigured()) {
+                try {
+                    updateStage(run, `twitter-${i}`, 'in_progress');
+                    run.stage = 'twitter';
+                    const tweetResult = await postTweet(article);
+                    if (tweetResult.success) {
+                        article.tweetId = tweetResult.tweetId;
+                        article.tweetUrl = tweetResult.tweetUrl;
+                        console.log(`[Pipeline] 🐦 Tweeted: ${tweetResult.tweetUrl}`);
+                    }
+                    updateStage(run, `twitter-${i}`, 'complete');
+                } catch (tweetErr) {
+                    run.errors.push(`Twitter: ${tweetErr.message}`);
+                    console.error(`[Pipeline] Twitter error: ${tweetErr.message}`);
                 }
             }
         }
