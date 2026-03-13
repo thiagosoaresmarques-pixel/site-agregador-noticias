@@ -88,10 +88,18 @@ get_header();
 
     <div class="articles-grid">
         <?php
+        $paged = max(1, get_query_var('paged', 1));
+        $per_page = 6;
+        $offset = 1 + (($paged - 1) * $per_page);
+
         $articles = new WP_Query([
-            'posts_per_page' => 6,
-            'offset'         => 1,
+            'posts_per_page' => $per_page,
+            'offset'         => $offset,
         ]);
+
+        // Recalculate max_num_pages (WP miscalculates when offset is used)
+        $total_posts = max(0, $articles->found_posts - 1); // -1 for hero post
+        $articles->max_num_pages = ceil($total_posts / $per_page);
 
         while ($articles->have_posts()) :
             $articles->the_post();
@@ -134,6 +142,8 @@ get_header();
     <div class="pagination">
         <?php
         echo paginate_links([
+            'total'     => $articles->max_num_pages,
+            'current'   => $paged,
             'prev_text' => '← Anterior',
             'next_text' => 'Próxima →',
         ]);

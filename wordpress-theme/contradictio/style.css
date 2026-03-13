@@ -323,10 +323,12 @@ img {
     z-index: 90;
     opacity: 0;
     transition: opacity var(--transition-normal);
+    pointer-events: none;
 }
 
 .nav-overlay.active {
     opacity: 1;
+    pointer-events: auto;
 }
 
 /* ─── Hero Section ──────────────────────────────── */
