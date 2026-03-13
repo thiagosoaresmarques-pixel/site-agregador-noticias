@@ -70,11 +70,17 @@ delete config.history;
 
 // ─── Cron Labels ──────────────────────────────────────────
 const CRON_PRESETS = {
+    '0 */2 * * *': 'A cada 2 horas',
+    '0 */3 * * *': 'A cada 3 horas',
+    '0 */4 * * *': 'A cada 4 horas',
     '0 */6 * * *': 'A cada 6 horas',
+    '0 */8 * * *': 'A cada 8 horas',
     '0 */12 * * *': 'A cada 12 horas',
     '0 8 * * *': '1x/dia (08:00)',
     '0 8,20 * * *': '2x/dia (08:00 e 20:00)',
     '0 7,13,19 * * *': '3x/dia (07:00, 13:00, 19:00)',
+    '0 6,10,14,18,22 * * *': '5x/dia',
+    '0 8 * * 1-5': 'Dias úteis (08:00)',
     '*/1 * * * *': 'A cada minuto (teste)',
 };
 

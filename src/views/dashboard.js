@@ -121,11 +121,17 @@ export function renderDashboard(container) {
             <div>
               <label style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-1); display: block;">Frequência</label>
               <select id="scheduler-frequency" class="form-input" style="width: 100%; padding: var(--space-2) var(--space-3);">
+                <option value="0 */2 * * *">A cada 2 horas</option>
+                <option value="0 */3 * * *">A cada 3 horas</option>
+                <option value="0 */4 * * *">A cada 4 horas</option>
                 <option value="0 */6 * * *">A cada 6 horas</option>
+                <option value="0 */8 * * *">A cada 8 horas</option>
                 <option value="0 */12 * * *">A cada 12 horas</option>
                 <option value="0 8 * * *">1x/dia (08:00)</option>
                 <option value="0 8,20 * * *">2x/dia (08:00 e 20:00)</option>
                 <option value="0 7,13,19 * * *">3x/dia (07:00, 13:00, 19:00)</option>
+                <option value="0 6,10,14,18,22 * * *">5x/dia</option>
+                <option value="0 8 * * 1-5">Dias úteis (08:00)</option>
               </select>
             </div>
             <div>
@@ -147,17 +153,41 @@ export function renderDashboard(container) {
               <div>
                 <label style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-1); display: block;">Artigos/execução</label>
                 <select id="scheduler-max-articles" class="form-input" style="width: 100%; padding: var(--space-2) var(--space-3);">
+                  <option value="1">1 artigo</option>
                   <option value="2">2 artigos</option>
                   <option value="3" selected>3 artigos</option>
                   <option value="5">5 artigos</option>
+                  <option value="8">8 artigos</option>
+                  <option value="10">10 artigos</option>
+                  <option value="15">15 artigos</option>
+                  <option value="20">20 artigos</option>
                 </select>
               </div>
               <div>
                 <label style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-1); display: block;">Auto-publicar</label>
                 <label style="display: flex; align-items: center; gap: 6px; font-size: var(--font-size-sm); cursor: pointer; margin-top: var(--space-1);">
                   <input type="checkbox" id="scheduler-auto-publish" checked>
-                  Como rascunho no WordPress
+                  Publicar automaticamente
                 </label>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+              <div>
+                <label style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-1); display: block;">Período</label>
+                <select id="scheduler-period" class="form-input" style="width: 100%; padding: var(--space-2) var(--space-3);">
+                  <option value="today" selected>Hoje</option>
+                  <option value="3days">Últimos 3 dias</option>
+                  <option value="week">Última semana</option>
+                  <option value="month">Último mês</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-1); display: block;">Ordenar por</label>
+                <select id="scheduler-sort" class="form-input" style="width: 100%; padding: var(--space-2) var(--space-3);">
+                  <option value="date">Mais recentes</option>
+                  <option value="rel" selected>Relevância</option>
+                  <option value="socialScore">Engajamento social</option>
+                </select>
               </div>
             </div>
             <button class="btn btn-sm" id="btn-save-scheduler-config" style="margin-top: var(--space-2);">
@@ -388,6 +418,13 @@ function updateSchedulerUI(status) {
   const autoPublish = document.getElementById('scheduler-auto-publish');
   if (autoPublish) autoPublish.checked = status.autoPublish;
 
+  // Sync period and sort selectors
+  const periodSelect = document.getElementById('scheduler-period');
+  if (periodSelect && status.period) periodSelect.value = status.period;
+
+  const sortSelect = document.getElementById('scheduler-sort');
+  if (sortSelect && status.sortBy) sortSelect.value = status.sortBy;
+
   // Sync category checkboxes
   const checkboxes = document.querySelectorAll('#scheduler-categories input[type="checkbox"]');
   checkboxes.forEach(cb => {
@@ -420,7 +457,7 @@ function updateSchedulerUI(status) {
         </div>
         <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm);">
           <span style="color: var(--text-secondary);">Auto-publicar:</span>
-          <span style="font-weight: 600;">${status.autoPublish ? '✅ Sim (rascunho)' : '❌ Não'}</span>
+          <span style="font-weight: 600;">${status.autoPublish ? '✅ Sim' : '❌ Não'}</span>
         </div>
       </div>
     `;
@@ -522,7 +559,9 @@ function getSchedulerFormConfig() {
     categories: categories.length > 0 ? categories : ['politica'],
     maxArticlesPerRun: parseInt(document.getElementById('scheduler-max-articles').value, 10),
     autoPublish: document.getElementById('scheduler-auto-publish').checked,
-    publishAsDraft: true,
+    period: document.getElementById('scheduler-period')?.value || 'today',
+    sortBy: document.getElementById('scheduler-sort')?.value || 'rel',
+    publishAsDraft: false,
   };
 }
 
