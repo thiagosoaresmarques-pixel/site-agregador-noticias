@@ -2,8 +2,8 @@
 /**
  * Deploy WordPress Theme — Contradictio
  *
- * Pushes all theme files to WordPress via the REST API Theme File Editor.
- * Uses WP Application Passwords for authentication.
+ * Pushes all theme files to WordPress via a custom REST API endpoint
+ * registered in the theme's functions.php.
  *
  * Usage:
  *   node scripts/deploy-theme.mjs
@@ -19,6 +19,22 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load .env for local execution (CI/CD sets env vars directly)
+const envPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const idx = trimmed.indexOf('=');
+        if (idx > 0) {
+            const key = trimmed.substring(0, idx).trim();
+            const val = trimmed.substring(idx + 1).trim();
+            if (!process.env[key]) process.env[key] = val;
+        }
+    }
+}
+
 const THEME_DIR = path.resolve(__dirname, '../wordpress-theme/contradictio');
 const THEME_SLUG = 'contradictio';
 
@@ -27,8 +43,7 @@ const WP_USER = process.env.WP_USER || 'admin';
 const WP_APP_PASSWORD = process.env.WP_APP_PASSWORD || '';
 const AUTH_HEADER = 'Basic ' + Buffer.from(`${WP_USER}:${WP_APP_PASSWORD}`).toString('base64');
 
-// Files to deploy (relative to theme dir)
-// Binary files (images, fonts) cannot be deployed via the theme editor API
+// Only text files can be deployed via REST — binary assets (images) need manual upload
 const TEXT_EXTENSIONS = ['.php', '.css', '.js', '.json', '.txt', '.md'];
 
 function getThemeFiles(dir, base = '') {
@@ -36,7 +51,6 @@ function getThemeFiles(dir, base = '') {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const relative = base ? `${base}/${entry.name}` : entry.name;
         if (entry.isDirectory()) {
-            // Skip hidden dirs and node_modules
             if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
             files.push(...getThemeFiles(path.join(dir, entry.name), relative));
         } else if (TEXT_EXTENSIONS.some(ext => entry.name.endsWith(ext))) {
@@ -46,19 +60,24 @@ function getThemeFiles(dir, base = '') {
     return files;
 }
 
-async function updateThemeFile(fileName, content) {
-    const url = `${WP_URL}/?rest_route=${encodeURIComponent(`/wp/v2/themes/${THEME_SLUG}`)}&file=${encodeURIComponent(fileName)}`;
+function restUrl(route, extra = '') {
+    const sep = extra ? '&' : '';
+    return `${WP_URL}/?rest_route=${encodeURIComponent(route)}${sep}${extra}`;
+}
 
-    const res = await fetch(url, {
-        method: 'PUT',
+async function deployFile(fileName, content) {
+    const res = await fetch(restUrl('/contradictio/v1/deploy-file'), {
+        method: 'POST',
         headers: {
             'Authorization': AUTH_HEADER,
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ newcontent: content }),
+        body: JSON.stringify({ file: fileName, content }),
     });
 
-    return { status: res.status, ok: res.ok };
+    let body = {};
+    try { body = await res.json(); } catch { }
+    return { status: res.status, ok: res.ok, message: body.message || '' };
 }
 
 async function main() {
@@ -69,8 +88,8 @@ async function main() {
 
     console.log(`\n🎨 Deploying theme "${THEME_SLUG}" to ${WP_URL}\n`);
 
-    // Verify connection first
-    const authRes = await fetch(`${WP_URL}/?rest_route=${encodeURIComponent('/wp/v2/users/me')}`, {
+    // Verify authentication
+    const authRes = await fetch(restUrl('/wp/v2/users/me'), {
         headers: { Authorization: AUTH_HEADER },
     });
 
@@ -82,6 +101,22 @@ async function main() {
     const user = await authRes.json();
     console.log(`✅ Authenticated as: ${user.name} (${user.roles?.[0]})\n`);
 
+    // Check if the deploy endpoint exists
+    const checkRes = await fetch(restUrl('/contradictio/v1/deploy-file'), {
+        method: 'POST',
+        headers: {
+            'Authorization': AUTH_HEADER,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ file: 'style.css', content: '' }),
+    });
+
+    if (checkRes.status === 404) {
+        console.error('❌ Deploy endpoint not found. The theme needs the deploy-file REST endpoint.');
+        console.error('   Please ensure the Contradictio theme is active and up-to-date on WordPress.');
+        process.exit(1);
+    }
+
     const files = getThemeFiles(THEME_DIR);
     console.log(`📁 Found ${files.length} theme files\n`);
 
@@ -90,13 +125,13 @@ async function main() {
 
     for (const file of files) {
         const content = fs.readFileSync(path.join(THEME_DIR, file), 'utf8');
-        const result = await updateThemeFile(file, content);
+        const result = await deployFile(file, content);
 
         if (result.ok) {
             console.log(`  ✅ ${file}`);
             success++;
         } else {
-            console.log(`  ❌ ${file} (HTTP ${result.status})`);
+            console.log(`  ❌ ${file} (HTTP ${result.status}: ${result.message})`);
             failed++;
         }
     }

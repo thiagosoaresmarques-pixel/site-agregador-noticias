@@ -568,3 +568,70 @@ function sintese_ping_on_publish($new_status, $old_status, $post) {
     wp_remote_get("https://www.bing.com/ping?sitemap={$sitemap}", ['blocking' => false, 'timeout' => 5]);
 }
 add_action('transition_post_status', 'sintese_ping_on_publish', 10, 3);
+
+// ─── CI/CD Theme Deploy Endpoint ──────────────────
+// Allows authenticated admins to update theme files via REST API
+// Used by: scripts/deploy-theme.mjs & GitHub Actions
+function contradictio_register_deploy_route() {
+    register_rest_route('contradictio/v1', '/deploy-file', [
+        'methods'             => 'POST',
+        'callback'            => 'contradictio_handle_deploy_file',
+        'permission_callback' => function () {
+            return current_user_can('edit_themes');
+        },
+    ]);
+}
+add_action('rest_api_init', 'contradictio_register_deploy_route');
+
+function contradictio_handle_deploy_file($request) {
+    $file = $request->get_param('file');
+    $content = $request->get_param('content');
+
+    if (empty($file) || !is_string($content)) {
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => 'Missing file or content parameter.',
+        ], 400);
+    }
+
+    // Security: block path traversal and non-text files
+    $file = str_replace('\\', '/', $file);
+    if (strpos($file, '..') !== false || $file[0] === '/') {
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => 'Invalid file path.',
+        ], 400);
+    }
+
+    $allowed_ext = ['php', 'css', 'js', 'json', 'txt', 'md'];
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed_ext, true)) {
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => "Extension .{$ext} not allowed.",
+        ], 400);
+    }
+
+    $theme_dir = get_template_directory();
+    $target = $theme_dir . '/' . $file;
+
+    // Create subdirectory if needed
+    $dir = dirname($target);
+    if (!is_dir($dir)) {
+        wp_mkdir_p($dir);
+    }
+
+    $result = file_put_contents($target, $content);
+    if ($result === false) {
+        return new WP_REST_Response([
+            'success' => false,
+            'message' => "Failed to write {$file}.",
+        ], 500);
+    }
+
+    return new WP_REST_Response([
+        'success' => true,
+        'message' => "Updated {$file} ({$result} bytes).",
+    ], 200);
+}
+
