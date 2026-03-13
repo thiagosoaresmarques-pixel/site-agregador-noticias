@@ -175,12 +175,31 @@ export function mdToHtml(content) {
 }
 
 /**
- * Build the full dialectical HTML content with all three sections
+ * Build the article HTML content.
+ * - NEW pipeline (thesis/antithesis are JSON objects): publishes only the Synthesis editorial.
+ * - LEGACY pipeline (thesis/antithesis are text strings): renders all three dialectical sections.
  * @param {Object} article - Article from pipeline with thesis, antithesis, synthesis, seo
- * @returns {string} HTML content with all dialectical sections
+ * @returns {string} HTML content
  */
 export function buildDialecticalContent(article) {
     const seo = article.seo || {};
+
+    // ── New pipeline: thesis/antithesis are JSON memos → publish only the editorial ──
+    const isNewPipeline = typeof article.thesis === 'object' || typeof article.antithesis === 'object';
+
+    if (isNewPipeline) {
+        // Use SEO-optimized HTML content if available, otherwise convert synthesis markdown
+        let content = seo.content || mdToHtml(article.synthesis || '');
+
+        // Source attribution
+        if (article.rawSource) {
+            content += `\n\n<p><em>Fonte original: ${article.rawSource}</em></p>`;
+        }
+
+        return content;
+    }
+
+    // ── Legacy pipeline: render all three dialectical sections for backward compat ──
     const parts = [];
 
     // ── Thesis Section ──
@@ -208,7 +227,6 @@ export function buildDialecticalContent(article) {
     }
 
     // ── Synthesis Section ──
-    // Use SEO-optimized HTML content if available, otherwise convert markdown
     const synthesisHtml = seo.content || mdToHtml(article.synthesis);
     if (synthesisHtml) {
         parts.push(

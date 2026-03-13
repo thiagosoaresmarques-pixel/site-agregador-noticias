@@ -1,6 +1,6 @@
 /**
  * Pipeline Orchestrator
- * Executes the dialectical triad: Raw News → Thesis → Antithesis → Synthesis → SEO
+ * Executes the editorial pipeline: Raw News → Ficha Factual (JSON) → Objeções (JSON) → Editorial Final → SEO
  */
 
 import { generateThesis, generateAntithesis, generateSynthesis, generateSEO } from './geminiClient.js';
@@ -241,26 +241,40 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
             };
 
             try {
-                // Stage 2: Generate Thesis
+                // Stage 2: Generate Thesis (Ficha Factual — JSON)
                 updateStage(run, `thesis-${i}`, 'in_progress');
                 run.stage = 'thesis';
                 const rawContent = `# ${raw.title}\n\nFonte: ${raw.source} (${raw.sourceUrl})\nData: ${raw.datePublished}\n\n${raw.body}`;
                 const thesisResult = await generateThesis(rawContent);
-                article.thesis = thesisResult.text;
+                // Parse JSON output, fallback to raw text
+                try {
+                    const jsonMatch = thesisResult.text.match(/```json\n?([\s\S]*?)\n?```/) ||
+                        thesisResult.text.match(/\{[\s\S]*\}/);
+                    article.thesis = jsonMatch ? JSON.parse(jsonMatch[1] || jsonMatch[0]) : thesisResult.text;
+                } catch {
+                    article.thesis = thesisResult.text;
+                }
                 article.timestamps.thesisAt = new Date().toISOString();
                 addTokens(run, article, thesisResult.tokens);
                 updateStage(run, `thesis-${i}`, 'complete');
 
-                // Stage 3: Generate Antithesis
+                // Stage 3: Generate Antithesis (Mapa de Objeções — JSON)
                 updateStage(run, `antithesis-${i}`, 'in_progress');
                 run.stage = 'antithesis';
                 const antithesisResult = await generateAntithesis(article.thesis);
-                article.antithesis = antithesisResult.text;
+                // Parse JSON output, fallback to raw text
+                try {
+                    const jsonMatch = antithesisResult.text.match(/```json\n?([\s\S]*?)\n?```/) ||
+                        antithesisResult.text.match(/\{[\s\S]*\}/);
+                    article.antithesis = jsonMatch ? JSON.parse(jsonMatch[1] || jsonMatch[0]) : antithesisResult.text;
+                } catch {
+                    article.antithesis = antithesisResult.text;
+                }
                 article.timestamps.antithesisAt = new Date().toISOString();
                 addTokens(run, article, antithesisResult.tokens);
                 updateStage(run, `antithesis-${i}`, 'complete');
 
-                // Stage 4: Generate Synthesis
+                // Stage 4: Generate Synthesis (Editorial Final Único)
                 updateStage(run, `synthesis-${i}`, 'in_progress');
                 run.stage = 'synthesis';
                 const synthesisResult = await generateSynthesis(article.thesis, article.antithesis);
