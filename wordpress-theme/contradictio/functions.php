@@ -569,6 +569,27 @@ function sintese_ping_on_publish($new_status, $old_status, $post) {
 }
 add_action('transition_post_status', 'sintese_ping_on_publish', 10, 3);
 
+// ─── AdSense: Serve ads.txt ──────────────────────
+function contradictio_ads_txt() {
+    $uri = strtok($_SERVER['REQUEST_URI'], '?');
+    if ($uri !== '/ads.txt') return;
+
+    $pub_id = get_theme_mod('sintese_adsense_pub_id', '');
+    if (empty($pub_id)) {
+        // Fallback to hardcoded pub ID
+        $pub_id = 'ca-pub-5001150160313896';
+    }
+
+    // Extract numeric pub ID (remove "ca-" prefix if present)
+    $pub_num = str_replace('ca-', '', $pub_id);
+
+    header('Content-Type: text/plain; charset=UTF-8');
+    header('X-Robots-Tag: noindex');
+    echo "google.com, {$pub_num}, DIRECT, f08c47fec0942fa0\n";
+    exit;
+}
+add_action('init', 'contradictio_ads_txt', 1);
+
 // ─── CI/CD Theme Deploy Endpoint ──────────────────
 // Allows authenticated admins to update theme files via REST API
 // Used by: scripts/deploy-theme.mjs & GitHub Actions
