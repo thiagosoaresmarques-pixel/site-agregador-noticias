@@ -441,6 +441,15 @@ function updateSchedulerUI(status) {
       ? `${formatDate(status.lastRun.startedAt)} — ${status.lastRun.articlesProcessed} proc. / ${status.lastRun.articlesPublished} pub.`
       : 'Nenhuma';
 
+    const PERIOD_LABELS = { 'today': 'Hoje', '3days': 'Últimos 3 dias', 'week': 'Última semana', 'month': 'Último mês' };
+    const SORT_LABELS = { 'date': 'Mais recentes', 'rel': 'Relevância', 'socialScore': 'Engajamento social' };
+    const CAT_LABELS = {
+      'politica': 'Política', 'internacional': 'Internacional', 'economia': 'Economia',
+      'tecnologia': 'Tecnologia', 'meio-ambiente': 'Meio Ambiente', 'educacao': 'Educação',
+      'saude': 'Saúde', 'ciencia': 'Ciência', 'esportes': 'Esportes', 'geral': 'Geral',
+    };
+    const activeCats = (status.categories || []).map(c => CAT_LABELS[c] || c);
+
     info.innerHTML = `
       <div style="display: grid; gap: var(--space-2);">
         <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm);">
@@ -454,6 +463,25 @@ function updateSchedulerUI(status) {
         <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm);">
           <span style="color: var(--text-secondary);">Última execução:</span>
           <span style="font-weight: 600;">${lastRunInfo}</span>
+        </div>
+        <div style="border-top: 1px solid var(--border-subtle); margin: var(--space-1) 0;"></div>
+        <div style="font-size: var(--font-size-sm);">
+          <span style="color: var(--text-secondary);">Categorias:</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+            ${activeCats.map(c => `<span style="background: var(--surface-3); padding: 2px 8px; border-radius: 12px; font-size: var(--font-size-xs);">${c}</span>`).join('')}
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm);">
+          <span style="color: var(--text-secondary);">Artigos/execução:</span>
+          <span style="font-weight: 600;">${status.maxArticlesPerRun}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm);">
+          <span style="color: var(--text-secondary);">Período:</span>
+          <span style="font-weight: 600;">${PERIOD_LABELS[status.period] || status.period || 'Hoje'}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm);">
+          <span style="color: var(--text-secondary);">Ordenar por:</span>
+          <span style="font-weight: 600;">${SORT_LABELS[status.sortBy] || status.sortBy || 'Relevância'}</span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm);">
           <span style="color: var(--text-secondary);">Auto-publicar:</span>
