@@ -135,14 +135,14 @@ function sintese_customizer_analytics($wp_customize) {
 }
 add_action('customize_register', 'sintese_customizer_analytics');
 
-// Inject GA4 script in <head> (frontend only, not for admins)
+// Inject GA4 script in <head> (frontend only)
 function sintese_ga_tracking() {
-    $ga_id = get_theme_mod('sintese_ga_id', '');
-    if (empty($ga_id) || is_admin() || current_user_can('manage_options')) {
+    $ga_id = get_theme_mod('sintese_ga_id', 'G-DW7TJEZBHQ');
+    if (empty($ga_id) || is_admin()) {
         return;
     }
     ?>
-    <!-- Google Analytics (GA4) — Síntese News -->
+    <!-- Google Analytics (GA4) — Contradictio -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc_attr($ga_id); ?>"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
