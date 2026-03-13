@@ -7,7 +7,7 @@
                 <div class="footer-title"><?php bloginfo('name'); ?></div>
                 <p><?php bloginfo('description'); ?></p>
                 <p style="margin-top: var(--space-4); font-size: var(--font-size-xs);">
-                    Notícias analisadas por IA dialética através da tríade Tese → Antítese → Síntese.
+                    Análise editorial à luz da tradição clássica e da Doutrina Social da Igreja.
                 </p>
             </div>
             <div class="footer-col">
