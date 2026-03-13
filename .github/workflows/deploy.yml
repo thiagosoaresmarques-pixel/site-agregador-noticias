@@ -60,7 +60,7 @@ jobs:
             --project=${{ env.PROJECT_ID }} \
             --allow-unauthenticated \
             --min-instances=1 \
-            --set-env-vars="NODE_ENV=production,DASHBOARD_PASSWORD=${{ secrets.DASHBOARD_PASSWORD }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},GEMINI_MODEL=${{ secrets.GEMINI_MODEL }},NEWS_API_KEY=${{ secrets.NEWS_API_KEY }},WP_URL=${{ secrets.WP_URL }},WP_USER=${{ secrets.WP_USER }}" \
+            --set-env-vars="NODE_ENV=production,DASHBOARD_PASSWORD=${{ secrets.DASHBOARD_PASSWORD }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},GEMINI_MODEL=${{ secrets.GEMINI_MODEL }},NEWS_API_KEY=${{ secrets.NEWS_API_KEY }},WP_URL=${{ secrets.WP_URL }},WP_USER=${{ secrets.WP_USER }},TWITTER_API_KEY=${{ secrets.TWITTER_API_KEY }},TWITTER_API_SECRET=${{ secrets.TWITTER_API_SECRET }},TWITTER_ACCESS_TOKEN=${{ secrets.TWITTER_ACCESS_TOKEN }},TWITTER_ACCESS_SECRET=${{ secrets.TWITTER_ACCESS_SECRET }}" \
             --quiet
 
       - name: Restore secrets with spaces
