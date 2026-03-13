@@ -11,7 +11,8 @@
     "start": "node server/index.js",
     "start:prod": "npm run build && node server/index.js",
     "test:pipeline": "node server/test-pipeline.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy:theme": "node scripts/deploy-theme.mjs"
   },
   "engines": {
     "node": ">=18.0.0"

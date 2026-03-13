@@ -78,3 +78,37 @@ jobs:
             --project=${{ env.PROJECT_ID }} \
             --format='value(status.url)')
           echo "🚀 Deployed to: $URL"
+
+  # ─── Stage 3: Deploy WordPress Theme ───────────────
+  deploy-theme:
+    name: 🎨 Deploy Theme
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for theme changes
+        id: theme-check
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q '^wordpress-theme/'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.theme-check.outputs.changed == 'true'
+        with:
+          node-version: '20'
+
+      - name: Deploy theme to WordPress
+        if: steps.theme-check.outputs.changed == 'true'
+        env:
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USER: ${{ secrets.WP_USER }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: node scripts/deploy-theme.mjs
+
