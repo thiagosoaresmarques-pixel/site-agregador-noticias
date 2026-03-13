@@ -55,12 +55,15 @@ export function renderDashboard(container) {
           <label style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-1); display: block;">Categoria</label>
           <select id="pipeline-category" class="form-input" style="width: 100%; padding: var(--space-2) var(--space-3);">
             <option value="politica" selected>Política</option>
-            <option value="geral">Geral</option>
-            <option value="tecnologia">Tecnologia</option>
+            <option value="internacional">Política Internacional</option>
             <option value="economia">Economia</option>
-            <option value="ciencia">Ciência</option>
+            <option value="tecnologia">Tecnologia</option>
+            <option value="meio-ambiente">Meio Ambiente</option>
+            <option value="educacao">Educação</option>
             <option value="saude">Saúde</option>
+            <option value="ciencia">Ciência</option>
             <option value="esportes">Esportes</option>
+            <option value="geral">Geral</option>
           </select>
         </div>
         <div>
@@ -129,10 +132,15 @@ export function renderDashboard(container) {
               <label style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-1); display: block;">Categorias</label>
               <div id="scheduler-categories" style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
                 <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="politica" checked> Política</label>
-                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="economia"> Economia</label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="internacional" checked> Internacional</label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="economia" checked> Economia</label>
                 <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="tecnologia"> Tecnologia</label>
-                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="ciencia"> Ciência</label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="meio-ambiente"> Meio Ambiente</label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="educacao"> Educação</label>
                 <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="saude"> Saúde</label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="ciencia"> Ciência</label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="esportes"> Esportes</label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: var(--font-size-sm); cursor: pointer;"><input type="checkbox" value="geral"> Geral</label>
               </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">

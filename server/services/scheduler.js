@@ -27,13 +27,13 @@ const DEFAULT_CONFIG = {
         { category: 'economia', maxArticles: 2 },
     ],
     // Full pool for rotation — scheduler cycles through these
-    categoryPool: ['politica', 'economia'],
+    categoryPool: ['politica', 'internacional', 'economia', 'tecnologia', 'meio-ambiente', 'educacao', 'saude', 'ciencia', 'esportes', 'geral'],
     // How many categories from the pool per run
-    categoriesPerRun: 2,
+    categoriesPerRun: 3,
     // Rotation index — tracks which categories to pick next
     rotationIndex: 0,
     // Legacy field for backward compat
-    categories: ['politica', 'economia'],
+    categories: ['politica', 'internacional', 'economia', 'tecnologia', 'meio-ambiente', 'educacao', 'saude', 'ciencia', 'esportes', 'geral'],
     maxArticlesPerRun: 10,
     autoPublish: true,
     publishAsDraft: false,
