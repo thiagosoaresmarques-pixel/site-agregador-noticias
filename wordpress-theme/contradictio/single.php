@@ -96,9 +96,7 @@ while (have_posts()) :
         <!-- Source Attribution -->
         <div class="source-attribution animate-on-scroll">
             <p>
-                ⚖️ Este artigo foi gerado pelo sistema <strong>Síntese News</strong> utilizando análise dialética automatizada
-                (Tese → Antítese → Síntese). As fontes originais são citadas ao longo do texto. 
-                O conteúdo foi revisado editorialmente antes da publicação.
+                ⚖️ A <strong>Contradictio</strong> analisa as notícias à luz da tradição clássica e da Doutrina Social da Igreja. As fontes originais são citadas ao longo do texto.
             </p>
         </div>
 
@@ -174,11 +172,9 @@ while (have_posts()) :
 
         <!-- About -->
         <div class="sidebar-widget">
-            <h4>Sobre a Análise</h4>
+            <h4>Sobre a Contradictio</h4>
             <p style="font-size: var(--font-size-sm); color: var(--text-muted); line-height: 1.7;">
-                Este artigo utiliza o método <strong>dialético</strong> de análise: a <span style="color:var(--thesis-color)">Tese</span> apresenta os fatos, 
-                a <span style="color:var(--antithesis-color)">Antítese</span> questiona e contrapõe, e a 
-                <span style="color:var(--synthesis-color)">Síntese</span> integra as perspectivas em uma visão superior.
+                Este editorial é produzido pela <strong>Contradictio</strong>: os fatos são verificados, as objeções levantadas e o juízo final é orientado pela Doutrina Social da Igreja e pela tradição filosófica clássica.
             </p>
         </div>
 
