@@ -582,9 +582,12 @@ function getSchedulerFormConfig() {
     categories.push(cb.value);
   });
 
+  const selectedCategories = categories.length > 0 ? categories : ['politica'];
   return {
     cronExpression: document.getElementById('scheduler-frequency').value,
-    categories: categories.length > 0 ? categories : ['politica'],
+    categories: selectedCategories,
+    categoryPool: selectedCategories,
+    rotationIndex: 0,
     maxArticlesPerRun: parseInt(document.getElementById('scheduler-max-articles').value, 10),
     autoPublish: document.getElementById('scheduler-auto-publish').checked,
     period: document.getElementById('scheduler-period')?.value || 'today',

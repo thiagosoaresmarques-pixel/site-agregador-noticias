@@ -340,12 +340,19 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
                         article.tweetId = tweetResult.tweetId;
                         article.tweetUrl = tweetResult.tweetUrl;
                         console.log(`[Pipeline] 🐦 Tweeted: ${tweetResult.tweetUrl}`);
+                    } else {
+                        console.warn(`[Pipeline] 🐦 Tweet failed: ${tweetResult.error}`);
+                        run.errors.push(`Twitter: ${tweetResult.error}`);
                     }
                     updateStage(run, `twitter-${i}`, 'complete');
                 } catch (tweetErr) {
                     run.errors.push(`Twitter: ${tweetErr.message}`);
                     console.error(`[Pipeline] Twitter error: ${tweetErr.message}`);
                 }
+            } else if (article.status === 'published' && !isTwitterConfigured()) {
+                console.log(`[Pipeline] 🐦 Twitter not configured, skipping tweet for: ${article.seo?.title || article.rawTitle}`);
+            } else if (article.status !== 'published') {
+                console.log(`[Pipeline] 🐦 Article not published (status: ${article.status}), skipping tweet`);
             }
         }
 

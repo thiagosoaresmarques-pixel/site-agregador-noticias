@@ -106,9 +106,9 @@ async function executeScheduledRun() {
         errors: [],
     };
 
-    // Build category runs via rotation through the pool
-    const pool = config.categoryPool || config.categories || ['politica'];
-    const perRun = config.categoriesPerRun || 3;
+    // Build category runs via rotation through user-selected categories
+    const pool = config.categories || ['politica'];
+    const perRun = Math.min(config.categoriesPerRun || 3, pool.length);
     const totalArticles = config.maxArticlesPerRun || 10;
     const startIdx = config.rotationIndex || 0;
 
@@ -257,6 +257,18 @@ export function getSchedulerStatus() {
 
 export function updateSchedulerConfig(newConfig) {
     const wasEnabled = config.enabled;
+
+    // If categories changed, sync categoryPool and reset rotation index
+    if (newConfig.categories) {
+        newConfig.categoryPool = newConfig.categories;
+        // Reset rotation if the pool changed
+        const oldCats = JSON.stringify(config.categories || []);
+        const newCats = JSON.stringify(newConfig.categories);
+        if (oldCats !== newCats) {
+            newConfig.rotationIndex = 0;
+        }
+    }
+
     Object.assign(config, newConfig);
     saveConfig(config, history);
 
