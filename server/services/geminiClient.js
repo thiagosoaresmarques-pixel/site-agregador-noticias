@@ -19,17 +19,28 @@ export function initGemini(apiKey, modelName = 'gemini-2.0-flash-lite') {
 }
 
 /**
- * Load a SKILL.md prompt file and extract the behavioral contract
+ * Load a SKILL.md prompt file and extract the behavioral contract.
+ * Also loads adjacent support files (e.g. CORPUS_GUIDE.md) if they exist.
  */
 function loadSkillPrompt(agentName) {
-    const skillPath = path.resolve(__dirname, '../../agents', agentName, 'SKILL.md');
+    const agentDir = path.resolve(__dirname, '../../agents', agentName);
+    const skillPath = path.join(agentDir, 'SKILL.md');
     if (!fs.existsSync(skillPath)) {
         throw new Error(`SKILL.md not found for agent: ${agentName} at ${skillPath}`);
     }
-    const content = fs.readFileSync(skillPath, 'utf-8');
+    let content = fs.readFileSync(skillPath, 'utf-8');
     // Remove YAML frontmatter
-    const withoutFrontmatter = content.replace(/^---[\s\S]*?---\n?/, '');
-    return withoutFrontmatter.trim();
+    content = content.replace(/^---[\s\S]*?---\n?/, '').trim();
+
+    // Load adjacent support files (e.g. CORPUS_GUIDE.md)
+    const corpusPath = path.join(agentDir, 'CORPUS_GUIDE.md');
+    if (fs.existsSync(corpusPath)) {
+        const corpus = fs.readFileSync(corpusPath, 'utf-8').trim();
+        content += `\n\n---\n\n## Corpus Guide (arquivo de apoio carregado automaticamente)\n\n${corpus}`;
+        console.log(`[Gemini] Loaded CORPUS_GUIDE.md for agent: ${agentName}`);
+    }
+
+    return content;
 }
 
 /**
@@ -80,22 +91,43 @@ export async function generateAntithesis(thesisContent) {
 }
 
 /**
- * Generate Synthesis (single final editorial) from Thesis + Antithesis JSON memos
+ * Generate Synthesis (single final editorial) from Thesis + Antithesis JSON memos.
+ * Optionally receives editorial memory for anti-repetition.
+ * @param {Object|string} thesisContent
+ * @param {Object|string} antithesisContent
+ * @param {string} [editorialMemory] - Formatted editorial memory string
  */
-export async function generateSynthesis(thesisContent, antithesisContent) {
+export async function generateSynthesis(thesisContent, antithesisContent, editorialMemory = '') {
     const systemPrompt = loadSkillPrompt('synthesis');
     const thesisStr = typeof thesisContent === 'object' ? JSON.stringify(thesisContent, null, 2) : thesisContent;
     const antithesisStr = typeof antithesisContent === 'object' ? JSON.stringify(antithesisContent, null, 2) : antithesisContent;
-    const userContent = `## FICHA FACTUAL (material interno da Tese):\n\n${thesisStr}\n\n---\n\n## MAPA DE OBJEÇÕES (material interno da Antítese):\n\n${antithesisStr}`;
+
+    let userContent = `## FICHA FACTUAL (material interno da Tese):\n\n${thesisStr}\n\n---\n\n## MAPA DE OBJEÇÕES (material interno da Antítese):\n\n${antithesisStr}`;
+
+    // Inject editorial memory if available
+    if (editorialMemory) {
+        userContent += `\n\n---\n\n## MEMÓRIA EDITORIAL RECENTE (últimos artigos publicados — use para evitar repetição):\n\n${editorialMemory}`;
+        console.log(`[Gemini] Editorial memory injected into Synthesis prompt`);
+    }
+
     return callGemini(systemPrompt, userContent);
 }
 
 /**
- * Generate SEO-optimized output from the final editorial
+ * Generate SEO-optimized output from the final editorial.
+ * Optionally receives editorial memory for title/meta/excerpt variation.
+ * @param {string} synthesisContent
+ * @param {string} [editorialMemory] - Formatted editorial memory string
  */
-export async function generateSEO(synthesisContent) {
+export async function generateSEO(synthesisContent, editorialMemory = '') {
     const systemPrompt = loadSkillPrompt('seo');
-    const userContent = `## Artigo Final para Empacotamento SEO:\n\n${synthesisContent}\n\nRetorne APENAS um objeto JSON válido conforme especificado nas instruções.`;
+    let userContent = `## Artigo Final para Empacotamento SEO:\n\n${synthesisContent}\n\nRetorne APENAS um objeto JSON válido conforme especificado nas instruções.`;
+
+    // Inject editorial memory if available
+    if (editorialMemory) {
+        userContent += `\n\n---\n\n## MEMÓRIA EDITORIAL RECENTE (últimos títulos e metas — evite repetir estruturas):\n\n${editorialMemory}`;
+        console.log(`[Gemini] Editorial memory injected into SEO prompt`);
+    }
+
     return callGemini(systemPrompt, userContent);
 }
-

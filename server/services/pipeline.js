@@ -134,6 +134,48 @@ export function getArticleById(id) {
 }
 
 /**
+ * Build editorial memory from recent published articles.
+ * Extracts titles, opening/closing lines, categories, etc.
+ * for injection into Synthesis and SEO prompts to prevent repetition.
+ * @param {number} [limit=20] - Number of recent articles to include
+ * @returns {string} Formatted editorial memory string
+ */
+export function buildEditorialMemory(limit = 20) {
+    const articles = loadArticles();
+    const published = articles
+        .filter(a => a.status === 'published' && a.synthesis)
+        .sort((a, b) => new Date(b.timestamps?.created || 0) - new Date(a.timestamps?.created || 0))
+        .slice(0, limit);
+
+    if (published.length === 0) return '';
+
+    const entries = published.map((a, idx) => {
+        const title = a.seo?.title || a.rawTitle || '(sem título)';
+        const category = a.category || 'geral';
+
+        // Extract first and last lines from synthesis
+        const lines = (a.synthesis || '').split('\n').filter(l => l.trim().length > 0);
+        const firstLine = lines[0]?.substring(0, 120) || '';
+        const lastLine = lines[lines.length - 1]?.substring(0, 120) || '';
+
+        // Extract SEO meta/excerpt
+        const meta = a.seo?.metaDescription || '';
+        const excerpt = a.seo?.excerpt || '';
+        const slug = a.seo?.slug || '';
+
+        return `${idx + 1}. [${category}] "${title}"
+   Slug: ${slug}
+   Abertura: ${firstLine}
+   Fecho: ${lastLine}
+   Meta: ${meta}
+   Excerpt: ${excerpt.substring(0, 100)}`;
+    });
+
+    console.log(`[Pipeline] Editorial memory built: ${published.length} articles`);
+    return entries.join('\n\n');
+}
+
+/**
  * Update an article's status and optional metadata
  */
 export function updateArticleStatus(id, status, meta = {}) {
@@ -275,10 +317,13 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
                 addTokens(run, article, antithesisResult.tokens);
                 updateStage(run, `antithesis-${i}`, 'complete');
 
+                // Build editorial memory for anti-repetition (before Synthesis)
+                const editorialMemory = buildEditorialMemory(20);
+
                 // Stage 4: Generate Synthesis (Editorial Final Único)
                 updateStage(run, `synthesis-${i}`, 'in_progress');
                 run.stage = 'synthesis';
-                const synthesisResult = await generateSynthesis(article.thesis, article.antithesis);
+                const synthesisResult = await generateSynthesis(article.thesis, article.antithesis, editorialMemory);
                 article.synthesis = synthesisResult.text;
                 article.timestamps.synthesisAt = new Date().toISOString();
                 addTokens(run, article, synthesisResult.tokens);
@@ -287,7 +332,7 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
                 // Stage 5: Generate SEO metadata
                 updateStage(run, `seo-${i}`, 'in_progress');
                 run.stage = 'seo';
-                const seoResult = await generateSEO(article.synthesis);
+                const seoResult = await generateSEO(article.synthesis, editorialMemory);
                 try {
                     // Try to parse as JSON, fallback to raw text
                     const jsonMatch = seoResult.text.match(/```json\n?([\s\S]*?)\n?```/) ||
