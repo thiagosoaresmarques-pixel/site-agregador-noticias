@@ -146,17 +146,21 @@ async function executeScheduledRun() {
                 autoPublish: config.autoPublish,
             });
 
-            // Wait for pipeline to complete
+            // Wait for pipeline to complete (resolves even on error)
             await waitForPipelineCompletion(runId);
 
-            // Count results from pipeline run
+            // Always count results from pipeline run, even if it had errors
             const pipelineStatus = getPipelineStatus(runId);
             if (pipelineStatus) {
                 runRecord.articlesProcessed += pipelineStatus.articlesProcessed || 0;
                 runRecord.articlesPublished += pipelineStatus.articlesPublished || 0;
+                if (pipelineStatus.errors?.length > 0) {
+                    runRecord.errors.push(...pipelineStatus.errors);
+                }
             }
 
-            console.log(`[Scheduler]   ✅ ${category} done — ${pipelineStatus?.articlesProcessed || 0} processed, ${pipelineStatus?.articlesPublished || 0} published`);
+            const statusIcon = pipelineStatus?.status === 'error' ? '⚠️' : '✅';
+            console.log(`[Scheduler]   ${statusIcon} ${category} done — ${pipelineStatus?.articlesProcessed || 0} processed, ${pipelineStatus?.articlesPublished || 0} published`);
         }
 
         runRecord.status = runRecord.errors.length > 0 ? 'partial' : 'complete';
@@ -185,8 +189,8 @@ async function waitForPipelineCompletion(runId) {
         const check = () => {
             const status = getPipelineStatus(runId);
             if (!status) return reject(new Error('Pipeline run not found'));
-            if (status.status === 'complete') return resolve(status);
-            if (status.status === 'error') return reject(new Error('Pipeline failed: ' + (status.errors?.[0] || 'unknown')));
+            // Resolve on BOTH complete and error — scheduler needs to read counts either way
+            if (status.status === 'complete' || status.status === 'error') return resolve(status);
             if (Date.now() - start > MAX_WAIT) return reject(new Error('Pipeline timeout (10 min)'));
             setTimeout(check, POLL_INTERVAL);
         };
