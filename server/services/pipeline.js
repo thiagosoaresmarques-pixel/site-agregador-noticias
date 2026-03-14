@@ -356,6 +356,7 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
             run.articlesProcessed = i + 1;
 
             // Auto-publish to WordPress if enabled
+            console.log(`[Pipeline] Publish check: autoPublish=${autoPublish}, status=${article.status}, wpAuth=${isAuthenticated()}`);
             if (autoPublish && article.status === 'draft' && isAuthenticated()) {
                 try {
                     updateStage(run, `publish-${i}`, 'in_progress');
@@ -367,12 +368,21 @@ async function processPipeline(runId, { newsApiKey, category, language, maxArtic
                         article.wpPostUrl = result.postUrl;
                         run.articlesPublished = (run.articlesPublished || 0) + 1;
                         console.log(`[Pipeline] 📤 Published: ${article.seo?.title || article.rawTitle}`);
+                    } else {
+                        console.error(`[Pipeline] ⚠️ Publish returned success=false: ${result.error}`);
+                        run.errors.push(`Publish failed: ${result.error}`);
                     }
                     updateStage(run, `publish-${i}`, 'complete');
                 } catch (pubErr) {
                     run.errors.push(`Publish: ${pubErr.message}`);
                     console.error(`[Pipeline] Publish error: ${pubErr.message}`);
                 }
+            } else if (!autoPublish) {
+                console.log(`[Pipeline] ⏭️ Skipping publish: autoPublish is disabled`);
+            } else if (article.status !== 'draft') {
+                console.log(`[Pipeline] ⏭️ Skipping publish: article status is '${article.status}' (not draft)`);
+            } else if (!isAuthenticated()) {
+                console.log(`[Pipeline] ⏭️ Skipping publish: WordPress not authenticated`);
             }
 
             // Auto-post to X/Twitter if enabled and article was published
