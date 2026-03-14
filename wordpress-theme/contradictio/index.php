@@ -89,7 +89,7 @@ get_header();
     <div class="articles-grid">
         <?php
         $paged = max(1, get_query_var('paged', 1));
-        $per_page = 6;
+        $per_page = 12;
         $offset = 1 + (($paged - 1) * $per_page);
 
         $articles = new WP_Query([
