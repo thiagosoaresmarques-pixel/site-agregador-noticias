@@ -7,7 +7,7 @@ import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { runPipeline, getArticles } from './pipeline.js';
+import { runPipeline, getArticles, getPipelineStatus } from './pipeline.js';
 import { publishToWordPress, isAuthenticated } from './wordpressClient.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -180,7 +180,6 @@ async function executeScheduledRun() {
 
 // Wait for a pipeline run to finish (max 10 minutes)
 async function waitForPipelineCompletion(runId) {
-    const { getPipelineStatus } = await import('./pipeline.js');
     const MAX_WAIT = 10 * 60 * 1000; // 10 minutes
     const POLL_INTERVAL = 3000; // 3 seconds
     const start = Date.now();
