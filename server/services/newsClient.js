@@ -59,17 +59,34 @@ function normalizeTitle(title) {
 }
 
 /**
- * Check if two titles are semantically similar (word overlap > threshold)
+ * Common Portuguese stopwords to exclude from title comparison.
+ * These appear in almost every news title and would cause false positives.
+ */
+const TITLE_STOPWORDS = new Set([
+    'brasil', 'governo', 'politica', 'pais', 'estado', 'mundo',
+    'novo', 'nova', 'sobre', 'como', 'mais', 'pode', 'apos',
+    'entre', 'para', 'contra', 'ainda', 'ante', 'crise', 'risco',
+    'analise', 'artigo', 'fatos', 'verdade', 'questao',
+]);
+
+/**
+ * Check if two titles are semantically similar (word overlap > threshold).
+ * Uses stopword filtering and requires minimum intersection count.
  * @param {string} t1 - First title
  * @param {string} t2 - Second title
- * @param {number} [threshold=0.6] - Minimum word overlap ratio (0-1)
+ * @param {number} [threshold=0.75] - Minimum word overlap ratio (0-1)
  * @returns {boolean}
  */
-function isTitleSimilar(t1, t2, threshold = 0.6) {
-    const words1 = new Set(normalizeTitle(t1).split(' ').filter(w => w.length > 2));
-    const words2 = new Set(normalizeTitle(t2).split(' ').filter(w => w.length > 2));
-    if (words1.size === 0 || words2.size === 0) return false;
+function isTitleSimilar(t1, t2, threshold = 0.75) {
+    const getWords = (t) => new Set(
+        normalizeTitle(t).split(' ').filter(w => w.length > 2 && !TITLE_STOPWORDS.has(w))
+    );
+    const words1 = getWords(t1);
+    const words2 = getWords(t2);
+    if (words1.size < 2 || words2.size < 2) return false;
     const intersection = [...words1].filter(w => words2.has(w)).length;
+    // Require at least 3 shared meaningful words AND ratio above threshold
+    if (intersection < 3) return false;
     const smaller = Math.min(words1.size, words2.size);
     return (intersection / smaller) >= threshold;
 }
