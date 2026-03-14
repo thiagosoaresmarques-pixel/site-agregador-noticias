@@ -16,7 +16,7 @@ const DATA_DIR = path.resolve(__dirname, '../data');
 const ARTICLES_FILE = path.join(DATA_DIR, 'articles.json');
 
 /**
- * Load already-processed article URLs to avoid duplicates
+ * Get set of already-processed article URLs for deduplication
  */
 function getProcessedUrls() {
     try {
@@ -28,6 +28,50 @@ function getProcessedUrls() {
         // Ignore errors, treat as no history
     }
     return new Set();
+}
+
+/**
+ * Get titles of already-processed articles for title-based dedup
+ */
+function getProcessedTitles() {
+    try {
+        if (fs.existsSync(ARTICLES_FILE)) {
+            const articles = JSON.parse(fs.readFileSync(ARTICLES_FILE, 'utf-8'));
+            return articles.map((a) => a.rawTitle || a.seo?.title || '').filter(Boolean);
+        }
+    } catch {
+        // Ignore errors
+    }
+    return [];
+}
+
+/**
+ * Normalize a title for comparison: lowercase, strip accents, remove punctuation
+ */
+function normalizeTitle(title) {
+    return title
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // strip accents
+        .replace(/[^a-z0-9\s]/g, '')     // remove punctuation
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+/**
+ * Check if two titles are semantically similar (word overlap > threshold)
+ * @param {string} t1 - First title
+ * @param {string} t2 - Second title
+ * @param {number} [threshold=0.6] - Minimum word overlap ratio (0-1)
+ * @returns {boolean}
+ */
+function isTitleSimilar(t1, t2, threshold = 0.6) {
+    const words1 = new Set(normalizeTitle(t1).split(' ').filter(w => w.length > 2));
+    const words2 = new Set(normalizeTitle(t2).split(' ').filter(w => w.length > 2));
+    if (words1.size === 0 || words2.size === 0) return false;
+    const intersection = [...words1].filter(w => words2.has(w)).length;
+    const smaller = Math.min(words1.size, words2.size);
+    return (intersection / smaller) >= threshold;
 }
 
 /**
@@ -177,24 +221,61 @@ export async function fetchArticles({
         const data = await response.json();
         let articles = data?.articles?.results || [];
 
-        // Deduplication: remove already-processed articles
+        // Deduplication: remove already-processed articles (by URL)
         if (skipDuplicates && articles.length > 0) {
             const processedUrls = getProcessedUrls();
             const before = articles.length;
             articles = articles.filter((a) => !processedUrls.has(a.url));
-            const removed = before - articles.length;
-            if (removed > 0) {
-                console.log(`[NewsClient] Dedup: removed ${removed} already-processed articles`);
+            const removedUrl = before - articles.length;
+            if (removedUrl > 0) {
+                console.log(`[NewsClient] Dedup (URL): removed ${removedUrl} already-processed articles`);
+            }
+        }
+
+        // Deduplication: remove articles with titles too similar to already-published ones
+        if (skipDuplicates && articles.length > 0) {
+            const processedTitles = getProcessedTitles();
+            if (processedTitles.length > 0) {
+                const before = articles.length;
+                articles = articles.filter((a) => {
+                    const isDup = processedTitles.some(pt => isTitleSimilar(a.title || '', pt));
+                    if (isDup) console.log(`[NewsClient] Dedup (title): skipping "${a.title}" — similar to existing article`);
+                    return !isDup;
+                });
+                const removedTitle = before - articles.length;
+                if (removedTitle > 0) {
+                    console.log(`[NewsClient] Dedup (title): removed ${removedTitle} similar-title articles`);
+                }
             }
         }
 
         // Filter out articles with empty body
         articles = articles.filter((a) => a.body && a.body.length > 100);
 
+        // Dedup within batch: remove articles in the current batch with similar titles
+        if (articles.length > 1) {
+            const unique = [articles[0]];
+            for (let i = 1; i < articles.length; i++) {
+                const isDupInBatch = unique.some(u => isTitleSimilar(u.title || '', articles[i].title || ''));
+                if (isDupInBatch) {
+                    console.log(`[NewsClient] Dedup (batch): skipping "${articles[i].title}" — similar to another article in this batch`);
+                } else {
+                    unique.push(articles[i]);
+                }
+            }
+            if (unique.length < articles.length) {
+                console.log(`[NewsClient] Dedup (batch): removed ${articles.length - unique.length} similar articles within batch`);
+            }
+            articles = unique;
+        }
+
         // Limit to requested count
         articles = articles.slice(0, maxArticles);
 
-        console.log(`[NewsClient] Returning ${articles.length} articles`);
+        console.log(`[NewsClient] Returning ${articles.length} articles (after all filters)`);
+        if (articles.length < maxArticles) {
+            console.log(`[NewsClient] ⚠️ Only ${articles.length}/${maxArticles} articles available after dedup`);
+        }
 
         return articles.map((a) => ({
             id: a.uri || crypto.randomUUID(),
