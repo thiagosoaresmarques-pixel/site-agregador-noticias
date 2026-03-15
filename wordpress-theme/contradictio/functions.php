@@ -554,20 +554,58 @@ function sintese_news_sitemap() {
 }
 add_action('init', 'sintese_news_sitemap');
 
-// ─── SEO: Ping Search Engines on Publish ──────────
-function sintese_ping_on_publish($new_status, $old_status, $post) {
+// ─── SEO: IndexNow — Instant Indexing ─────────────
+// Notifies Bing, Yandex, Seznam, Naver instantly when a post is published
+define('INDEXNOW_API_KEY', '56978b9206b04cf4b817f88558ffad81');
+
+/**
+ * Serve the IndexNow API key verification file at /{key}.txt
+ */
+function sintese_indexnow_key_file() {
+    $uri = strtok($_SERVER['REQUEST_URI'], '?');
+    if ($uri !== '/' . INDEXNOW_API_KEY . '.txt') return;
+
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo INDEXNOW_API_KEY;
+    exit;
+}
+add_action('init', 'sintese_indexnow_key_file', 0);
+
+/**
+ * Submit URL to IndexNow API on publish
+ */
+function sintese_indexnow_on_publish($new_status, $old_status, $post) {
     if ($new_status !== 'publish' || $old_status === 'publish') return;
     if ($post->post_type !== 'post') return;
 
-    $sitemap = urlencode(get_site_url() . '/wp-sitemap.xml');
+    $url = get_permalink($post);
+    $host = wp_parse_url(get_site_url(), PHP_URL_HOST);
+    $sitemap = get_site_url() . '/wp-sitemap.xml';
 
-    // Ping Google
-    wp_remote_get("https://www.google.com/ping?sitemap={$sitemap}", ['blocking' => false, 'timeout' => 5]);
+    // IndexNow: submit to Bing (which shares with Yandex, Seznam, Naver)
+    $indexnow_url = 'https://api.indexnow.org/indexnow';
+    $body = wp_json_encode([
+        'host'    => $host,
+        'key'     => INDEXNOW_API_KEY,
+        'keyLocation' => get_site_url() . '/' . INDEXNOW_API_KEY . '.txt',
+        'urlList' => [$url],
+    ]);
 
-    // Ping Bing/IndexNow
-    wp_remote_get("https://www.bing.com/ping?sitemap={$sitemap}", ['blocking' => false, 'timeout' => 5]);
+    wp_remote_post($indexnow_url, [
+        'blocking' => false,
+        'timeout'  => 10,
+        'headers'  => ['Content-Type' => 'application/json; charset=utf-8'],
+        'body'     => $body,
+    ]);
+
+    // Also ping Google (doesn't support IndexNow, uses sitemap ping)
+    $sitemap_encoded = urlencode($sitemap);
+    wp_remote_get("https://www.google.com/ping?sitemap={$sitemap_encoded}", ['blocking' => false, 'timeout' => 5]);
+
+    // Log for debugging
+    error_log("[IndexNow] Submitted: {$url}");
 }
-add_action('transition_post_status', 'sintese_ping_on_publish', 10, 3);
+add_action('transition_post_status', 'sintese_indexnow_on_publish', 10, 3);
 
 // ─── AdSense: Serve ads.txt ──────────────────────
 function contradictio_ads_txt() {
