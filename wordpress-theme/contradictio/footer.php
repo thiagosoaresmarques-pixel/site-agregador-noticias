@@ -24,12 +24,14 @@
             <div class="footer-col">
                 <h5>Sobre</h5>
                 <ul>
-                    <li><a href="#">Metodologia Dialética</a></li>
-                    <li><a href="#">Fontes &amp; Transparência</a></li>
-                    <li><a href="#">Política de Privacidade</a></li>
-                    <li><a href="#">Contato</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/sobre/')); ?>">Sobre Nós</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/metodologia/')); ?>">Metodologia Dialética</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/metodologia/#fontes')); ?>">Fontes &amp; Transparência</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/politica-de-privacidade/')); ?>">Política de Privacidade</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/sobre/#contato')); ?>">Contato</a></li>
                 </ul>
             </div>
+
             <div class="footer-col">
                 <h5>Tecnologia</h5>
                 <ul>
