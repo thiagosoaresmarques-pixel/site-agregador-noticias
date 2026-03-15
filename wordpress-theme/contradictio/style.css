@@ -2,7 +2,7 @@
 Theme Name: Contradictio
 Theme URI: https://contradictio.com.br
 Description: Tema dialético premium para portal de notícias com análise Tese → Antítese → Síntese.
-Version: 2.0.0
+Version: 2.1.0
 Author: Contradictio
 Author URI: https://contradictio.com.br
 License: MIT
@@ -1841,5 +1841,139 @@ img {
 
     .page-cta {
         padding: var(--space-8) var(--space-6);
+    }
+}
+
+/* ─── 404 Error Page ───────────────────────────── */
+.error-404-page {
+    min-height: 60vh;
+}
+
+.error-hero {
+    text-align: center;
+    padding: var(--space-16) 0 var(--space-10);
+    position: relative;
+    overflow: hidden;
+}
+
+.error-glitch {
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    margin-bottom: var(--space-4);
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    animation: glitchPulse 3s ease-in-out infinite;
+    user-select: none;
+}
+
+@keyframes glitchPulse {
+    0%, 100% { opacity: 1; filter: blur(0); }
+    50% { opacity: 0.85; filter: blur(0.5px); }
+    25%, 75% { transform: translateX(0); }
+    30% { transform: translateX(-2px); }
+    70% { transform: translateX(2px); }
+}
+
+.error-hero h1 {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    margin-bottom: var(--space-4);
+}
+
+.error-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 0 auto var(--space-8);
+    line-height: 1.7;
+    font-family: var(--font-serif);
+}
+
+.error-search {
+    display: flex;
+    max-width: 480px;
+    margin: 0 auto var(--space-6);
+    gap: var(--space-2);
+}
+
+.error-search input {
+    flex: 1;
+    padding: var(--space-3) var(--space-5);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.error-search input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.error-search input::placeholder {
+    color: var(--text-muted);
+}
+
+.error-search button {
+    padding: var(--space-3) var(--space-5);
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+}
+
+.error-search button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow);
+}
+
+.error-links {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+}
+
+.error-links a {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.error-links a:hover {
+    color: var(--text-primary);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.error-suggestions {
+    padding: var(--space-10) 0;
+    border-top: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 480px) {
+    .error-search {
+        flex-direction: column;
+    }
+
+    .error-hero {
+        padding: var(--space-10) 0 var(--space-8);
     }
 }
